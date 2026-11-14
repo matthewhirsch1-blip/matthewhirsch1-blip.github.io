@@ -1,0 +1,1522 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0c1316">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Cipherkeep">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<title>Cipherkeep</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Night archive: ink-dark stone, parchment text, brass for reward, verdigris for right, ember for wrong.
+     Layout: one phone-width column; the map path is the single bold element. */
+  --ink: #0c1316;
+  --stone: #152025;
+  --stone-2: #1d2b31;
+  --line: #2b3c42;
+  --parch: #efe6cf;
+  --dim: #9db0ac;
+  --brass: #e4b14d;
+  --verd: #4fc4a5;
+  --ember: #ef6a48;
+  --f-display: 'IM Fell English SC', 'Palatino Linotype', Georgia, serif;
+  --f-body: 'Atkinson Hyperlegible', 'Segoe UI', Roboto, Arial, sans-serif;
+  --f-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--ink); color: var(--parch); font-family: var(--f-body); font-size: 17px; line-height: 1.45; -webkit-tap-highlight-color: transparent; }
+body::before { content: ""; position: fixed; inset: 0; pointer-events: none; background: radial-gradient(120% 60% at 50% -10%, rgba(228,177,77,.10), transparent 60%), radial-gradient(80% 50% at 100% 100%, rgba(79,196,165,.06), transparent 70%); }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+#app { position: relative; max-width: 560px; margin: 0 auto; min-height: 100%; display: flex; flex-direction: column; }
+header.top { position: sticky; top: 0; z-index: 5; display: flex; gap: 8px; align-items: center; justify-content: space-between; padding: calc(10px + env(safe-area-inset-top)) 16px 10px; background: linear-gradient(var(--ink) 70%, transparent); }
+.chip { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; background: var(--stone); border: 1px solid var(--line); font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums; }
+.chip svg { width: 16px; height: 16px; }
+main { flex: 1; padding: 4px 16px 96px; }
+nav.tabs { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 560px; z-index: 6; display: grid; grid-template-columns: repeat(5, 1fr); background: rgba(12,19,22,.96); border-top: 1px solid var(--line); padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); }
+nav.tabs button { background: none; border: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 0; font-size: 12px; color: var(--dim); }
+nav.tabs button svg { width: 24px; height: 24px; }
+nav.tabs button.on { color: var(--brass); }
+nav.tabs .dot { position: absolute; margin-left: 18px; width: 8px; height: 8px; border-radius: 50%; background: var(--ember); }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 400; margin: 0; text-wrap: balance; letter-spacing: .01em; }
+h1 { font-size: 34px; line-height: 1.05; }
+h2 { font-size: 26px; line-height: 1.1; }
+h3 { font-size: 20px; }
+.muted { color: var(--dim); }
+.small { font-size: 14px; }
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.row { display: flex; gap: 10px; align-items: center; }
+.card { background: var(--stone); border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 12px; padding: 13px 18px; font-weight: 700; font-size: 17px; background: var(--brass); color: #1b1407; box-shadow: 0 4px 0 #9c7426; transition: transform .08s; }
+.btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #9c7426; }
+.btn.ghost { background: var(--stone-2); color: var(--parch); box-shadow: 0 4px 0 #0a1012; border: 1px solid var(--line); }
+.btn.verd { background: var(--verd); box-shadow: 0 4px 0 #2b7d68; color: #062017; }
+.btn.wide { width: 100%; }
+.btn[disabled] { opacity: .45; pointer-events: none; }
+/* countdown banner */
+.trial-banner { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; padding: 14px; border-radius: 14px; background: linear-gradient(135deg, #2a1f10, #1a2226); border: 1px solid #5b4721; }
+.trial-banner .days { font-family: var(--f-display); font-size: 46px; line-height: .9; color: var(--brass); text-align: center; min-width: 64px; }
+.trial-banner .days small { display: block; font-family: var(--f-body); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); }
+/* goal ring */
+.ring { --p: 0; width: 54px; height: 54px; border-radius: 50%; background: conic-gradient(var(--verd) calc(var(--p) * 1%), var(--stone-2) 0); display: grid; place-items: center; flex: none; }
+.ring span { width: 42px; height: 42px; border-radius: 50%; background: var(--stone); display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+/* map */
+.realm { position: relative; overflow: hidden; border-radius: 16px; border: 1px solid var(--line); background: var(--stone); padding: 14px 14px 14px 76px; text-align: left; width: 100%; }
+.realm .emb { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; background: color-mix(in srgb, var(--rc) 22%, var(--stone-2)); border: 1px solid color-mix(in srgb, var(--rc) 50%, transparent); }
+.realm .emb svg { width: 32px; height: 32px; color: var(--rc); }
+.realm .name { font-family: var(--f-display); font-size: 21px; line-height: 1.1; }
+.realm .bar { height: 6px; background: var(--stone-2); border-radius: 6px; margin-top: 8px; overflow: hidden; }
+.realm .bar i { display: block; height: 100%; background: var(--rc); border-radius: 6px; }
+.realm .seal { position: absolute; right: 12px; top: 12px; }
+.realm.focus { border-color: color-mix(in srgb, var(--rc) 70%, transparent); box-shadow: 0 0 0 1px color-mix(in srgb, var(--rc) 35%, transparent), 0 10px 30px -12px color-mix(in srgb, var(--rc) 60%, transparent); }
+.tag { display: inline-block; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; padding: 2px 7px; border-radius: 6px; background: var(--stone-2); color: var(--dim); }
+.tag.hot { background: #3a2a10; color: var(--brass); }
+/* realm path */
+.path { position: relative; display: flex; flex-direction: column; align-items: center; gap: 22px; padding: 24px 0 10px; }
+.path svg.trail { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.node { position: relative; width: 74px; height: 74px; border-radius: 50%; border: 0; background: var(--stone-2); box-shadow: 0 6px 0 #0a1012, inset 0 0 0 3px var(--line); display: grid; place-items: center; }
+.node svg { width: 34px; height: 34px; }
+.node.done { background: color-mix(in srgb, var(--rc) 35%, var(--stone-2)); box-shadow: 0 6px 0 color-mix(in srgb, var(--rc) 40%, #000), inset 0 0 0 3px var(--rc); }
+.node.next { background: var(--rc); color: #10161a; box-shadow: 0 6px 0 color-mix(in srgb, var(--rc) 45%, #000), 0 0 0 8px color-mix(in srgb, var(--rc) 20%, transparent); animation: bob 2.4s ease-in-out infinite; }
+.node.boss { width: 96px; height: 96px; border-radius: 22px; }
+.node.locked { opacity: .45; }
+.node .stars { position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); display: flex; gap: 1px; }
+.node .stars svg { width: 15px; height: 15px; }
+.node-label { position: absolute; left: calc(100% + 12px); top: 50%; transform: translateY(-50%); white-space: nowrap; font-size: 13px; color: var(--dim); text-align: left; }
+.node-label.left { left: auto; right: calc(100% + 12px); text-align: right; }
+@keyframes bob { 50% { transform: translateY(-5px); } }
+/* quiz */
+.quiz-top { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.quiz-top .x { background: none; border: 0; padding: 6px; color: var(--dim); }
+.pips { flex: 1; display: flex; gap: 4px; }
+.pips i { flex: 1; height: 10px; border-radius: 5px; background: var(--stone-2); }
+.pips i.ok { background: var(--verd); } .pips i.no { background: var(--ember); } .pips i.cur { background: var(--brass); }
+.combo { display: flex; align-items: center; gap: 4px; font-weight: 700; color: var(--brass); min-width: 52px; justify-content: flex-end; font-variant-numeric: tabular-nums; }
+.combo svg { width: 20px; height: 20px; }
+.qcard { background: var(--stone); border: 1px solid var(--line); border-radius: 16px; padding: 16px; }
+.qmeta { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.qtext { font-size: 19px; line-height: 1.4; }
+pre.code { font-family: var(--f-mono); font-size: 14px; line-height: 1.55; background: #0a1013; border: 1px solid var(--line); border-left: 3px solid var(--brass); border-radius: 10px; padding: 10px 12px; margin: 12px 0 0; overflow-x: auto; white-space: pre; }
+pre.code .kw { color: var(--brass); font-weight: 600; }
+pre.code .st { color: var(--verd); }
+pre.code .nu { color: #9bc7ff; }
+.opts { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+.opt { text-align: left; display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: start; padding: 13px 14px; border-radius: 12px; background: var(--stone-2); border: 1.5px solid var(--line); box-shadow: 0 4px 0 #0a1012; font-size: 17px; transition: transform .08s, border-color .15s; }
+.opt b { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: var(--ink); color: var(--dim); font-size: 14px; }
+.opt.mono span { font-family: var(--f-mono); font-size: 14px; }
+.opt:active { transform: translateY(2px); }
+.opt.ok { border-color: var(--verd); background: color-mix(in srgb, var(--verd) 18%, var(--stone-2)); }
+.opt.ok b { background: var(--verd); color: #062017; }
+.opt.no { border-color: var(--ember); background: color-mix(in srgb, var(--ember) 15%, var(--stone-2)); }
+.opt.no b { background: var(--ember); color: #250a03; }
+.opt.gone { opacity: .25; pointer-events: none; }
+.opt.pick { border-color: var(--brass); }
+.opts.locked .opt { pointer-events: none; }
+.feedback { position: fixed; left: 50%; transform: translateX(-50%); bottom: 0; width: 100%; max-width: 560px; z-index: 8; padding: 16px 16px calc(16px + env(safe-area-inset-bottom)); border-radius: 18px 18px 0 0; background: #13261f; border-top: 2px solid var(--verd); animation: rise .22s ease-out; }
+.feedback.bad { background: #2a1510; border-top-color: var(--ember); }
+.feedback h3 { color: var(--verd); } .feedback.bad h3 { color: var(--ember); }
+.feedback p { margin: 6px 0 12px; font-size: 16px; }
+@keyframes rise { from { transform: translate(-50%, 40px); opacity: 0; } }
+.floater { position: fixed; z-index: 20; pointer-events: none; font-weight: 700; color: var(--brass); animation: floatup 1s ease-out forwards; }
+@keyframes floatup { to { transform: translateY(-50px); opacity: 0; } }
+.toolbar { display: flex; gap: 8px; margin-top: 12px; }
+.toolbar button { background: var(--stone-2); border: 1px solid var(--line); border-radius: 10px; padding: 7px 11px; font-size: 14px; color: var(--dim); }
+/* modal */
+.scrim { position: fixed; inset: 0; z-index: 30; background: rgba(5,8,10,.78); display: grid; place-items: center; padding: 16px; animation: fade .15s; }
+.modal { width: 100%; max-width: 460px; max-height: 88vh; overflow-y: auto; background: var(--stone); border: 1px solid var(--line); border-radius: 18px; padding: 18px; }
+@keyframes fade { from { opacity: 0; } }
+/* chest */
+.chest-stage { position: relative; height: 190px; display: grid; place-items: center; }
+.chest-stage .rays { position: absolute; width: 260px; height: 260px; border-radius: 50%; background: repeating-conic-gradient(from 0deg, rgba(228,177,77,.35) 0 10deg, transparent 10deg 24deg); opacity: 0; transform: scale(.4); transition: opacity .4s, transform .6s; }
+.chest-stage.open .rays { opacity: 1; transform: scale(1) rotate(30deg); animation: spin 12s linear infinite; }
+.chest-stage .box { width: 120px; height: 120px; transition: transform .2s; }
+.chest-stage.shake .box { animation: shake .5s ease-in-out 2; }
+@keyframes shake { 25% { transform: rotate(-7deg); } 75% { transform: rotate(7deg); } }
+@keyframes spin { to { transform: scale(1) rotate(390deg); } }
+.loot { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.loot .chip { font-size: 14px; }
+/* allies */
+.allies { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.ally { position: relative; text-align: center; padding: 12px 10px; border-radius: 14px; background: var(--stone); border: 1.5px solid var(--line); }
+.ally.equipped { border-color: var(--brass); }
+.ally .port { width: 84px; height: 84px; margin: 0 auto 6px; border-radius: 50%; display: grid; place-items: center; background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--ac) 45%, var(--stone-2)), var(--stone-2) 70%); }
+.ally .port svg { width: 60px; height: 60px; }
+.ally.locked .port { filter: grayscale(1) brightness(.5); }
+.ally .rar { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; color: var(--ac); }
+.shardbar { height: 6px; background: var(--stone-2); border-radius: 6px; overflow: hidden; margin-top: 6px; }
+.shardbar i { display: block; height: 100%; background: var(--ac); }
+/* casebook */
+.suspects { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.suspect { padding: 12px; border-radius: 12px; background: var(--stone-2); border: 1.5px solid var(--line); text-align: left; }
+.suspect.out { opacity: .45; text-decoration: line-through; text-decoration-color: var(--ember); }
+.clue { border-left: 3px solid var(--brass); padding: 4px 0 4px 12px; font-style: italic; }
+.clue.locked { border-left-color: var(--line); font-style: normal; color: var(--dim); }
+/* report */
+.stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stat { background: var(--stone-2); border-radius: 12px; padding: 10px; }
+.stat b { display: block; font-size: 22px; font-variant-numeric: tabular-nums; }
+.hbar { display: grid; grid-template-columns: 120px 1fr 44px; gap: 8px; align-items: center; font-size: 14px; }
+.hbar .track { height: 10px; background: var(--stone-2); border-radius: 5px; overflow: hidden; }
+.hbar .track i { display: block; height: 100%; background: var(--verd); }
+.days14 { display: grid; grid-template-columns: repeat(14, 1fr); gap: 4px; }
+.days14 i { aspect-ratio: 1; border-radius: 4px; background: var(--stone-2); }
+.days14 i.on { background: var(--brass); } .days14 i.ward { background: #6f5a2c; }
+textarea, input[type=text] { width: 100%; background: var(--ink); color: var(--parch); border: 1px solid var(--line); border-radius: 10px; padding: 10px; font: inherit; }
+textarea { font-family: var(--f-mono); font-size: 12px; min-height: 80px; }
+.quest { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
+.qbar { height: 8px; background: var(--stone-2); border-radius: 4px; overflow: hidden; margin-top: 6px; }
+.qbar i { display: block; height: 100%; background: var(--brass); }
+.road { display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 10px; }
+.road .mile { flex: none; width: 92px; padding: 10px 6px; border-radius: 12px; text-align: center; background: var(--stone-2); border: 1px solid var(--line); font-size: 13px; }
+.road .mile.got { border-color: var(--brass); }
+.road .mile b { display: block; font-size: 17px; }
+.timer { font-variant-numeric: tabular-nums; font-weight: 700; }
+#toasts { position: fixed; top: 8px; left: 50%; transform: translateX(-50%); z-index: 40; width: min(92%, 420px); display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; }
+.toast { padding: 9px 14px; border-radius: 12px; background: var(--stone-2); border: 1px solid var(--brass); font-weight: 700; font-size: 15px; animation: fade .2s; text-align: center; }
+.storyp { font-size: 17px; line-height: 1.55; }
+.storyp::first-letter { font-family: var(--f-display); font-size: 2.3em; float: left; line-height: .9; margin: 4px 6px 0 0; color: var(--brass); }
+.btn.big { font-family: var(--f-display); font-size: 24px; letter-spacing: .05em; padding: 15px 18px; }
+.hero { border-radius: 18px; padding: 16px; background: linear-gradient(160deg, color-mix(in srgb, var(--rc) 30%, var(--stone)), var(--stone) 75%); border: 1.5px solid color-mix(in srgb, var(--rc) 60%, transparent); box-shadow: 0 14px 34px -18px var(--rc); }
+.foe-big { width: 96px; height: 96px; flex: none; animation: bob 2.4s ease-in-out infinite; }
+.foe-big.ko { animation: none; opacity: .45; transform: rotate(75deg); }
+.modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.mode { display: flex; flex-direction: column; align-items: center; gap: 2px; background: var(--stone); border: 1px solid var(--line); border-radius: 14px; padding: 12px 6px; font-size: 14px; }
+.mode svg { width: 26px; height: 26px; color: var(--brass); }
+.mode[disabled] { opacity: .45; }
+.battle { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; padding: 10px 12px; border-radius: 14px; background: var(--stone); border: 1px solid color-mix(in srgb, var(--rc) 45%, var(--line)); }
+.battle .foe { width: 62px; height: 62px; flex: none; }
+.battle .foe.hit { animation: hit .45s; }
+@keyframes hit { 20% { transform: translateX(9px) rotate(9deg); filter: brightness(2.4); } 60% { transform: translateX(-6px) rotate(-5deg); } }
+.hp { height: 12px; background: var(--stone-2); border-radius: 6px; overflow: hidden; margin: 5px 0 3px; }
+.hp i { display: block; height: 100%; background: linear-gradient(90deg, var(--ember), #f2a04a); border-radius: 6px; transition: width .35s; }
+.hearts { color: var(--ember); letter-spacing: 2px; font-size: 19px; white-space: nowrap; }
+.hearts .lost { opacity: .22; }
+.jolt { animation: jolt .35s; }
+@keyframes jolt { 25% { transform: translateX(-7px); } 75% { transform: translateX(7px); } }
+.mini-port { width: 46px; height: 46px; flex: none; border-radius: 50%; background: var(--stone-2); display: grid; place-items: center; }
+.mini-port svg { width: 36px; height: 36px; }
+.stepn { flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--brass); color: #1b1407; font-weight: 700; display: grid; place-items: center; }
+.shop-item { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; }
+.node svg[viewBox="0 0 64 64"] { width: 46px; height: 46px; }
+.node.boss svg[viewBox="0 0 64 64"] { width: 64px; height: 64px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="top" id="topbar"></header>
+  <main id="view" tabindex="-1"></main>
+  <nav class="tabs" id="tabs" aria-label="Main"></nav>
+</div>
+<div id="layer"></div>
+<script>
+// Cipherkeep question bank. o[0] is always the correct answer; the game reorders options.
+// r = realm, c = Ontario Grade 7 expectation, d = difficulty 1 to 3, k = pseudocode, m = monospace options
+const BANK = [
+// ===== CLOCKWORK CATACOMBS: coding =====
+{id:"k01",r:"clock",c:"C3.2",d:1,q:"What does this program display?",k:"SET x TO 3\nSET y TO x × 4\nSET x TO y − x\nDISPLAY x",o:["9","3","12","15"],e:"y = 12, then x = 12 − 3 = 9. Each line uses the newest values."},
+{id:"k02",r:"clock",c:"C3.2",d:1,q:"What does this program display?",k:"SET n TO 10\nREPEAT 3 TIMES\n    SET n TO n − 3\nEND REPEAT\nDISPLAY n",o:["1","4","7","−2"],e:"10 → 7 → 4 → 1. Three passes, subtracting 3 each time."},
+{id:"k03",r:"clock",c:"C3.2",d:2,q:"What does this program display?",k:"SET total TO 0\nREPEAT FOR k FROM 1 TO 4\n    SET total TO total + k × k\nEND REPEAT\nDISPLAY total",o:["30","10","16","100"],e:"1 + 4 + 9 + 16 = 30. Multiplication happens before addition inside the line."},
+{id:"k04",r:"clock",c:"C3.2, B2.7",d:2,q:"What does this program display?",k:"SET a TO 2\nREPEAT 4 TIMES\n    SET a TO a × 3\nEND REPEAT\nDISPLAY a",o:["162","24","54","486"],e:"2 × 3 × 3 × 3 × 3 = 2 × 3⁴ = 2 × 81 = 162."},
+{id:"k05",r:"clock",c:"C3.1",d:2,q:"How many times does the loop run?",k:"SET n TO 1\nSET steps TO 0\nREPEAT UNTIL n > 100\n    SET n TO n × 2\n    SET steps TO steps + 1\nEND REPEAT\nDISPLAY steps",o:["7","6","50","100"],e:"n becomes 2, 4, 8, 16, 32, 64, 128. It passes 100 after 7 doublings."},
+{id:"k06",r:"clock",c:"C3.2",d:1,q:"The room is 18°C. What does this thermostat program display?",k:"SET t TO 18\nIF t > 25 THEN\n    DISPLAY \"Fan on\"\nELSE IF t < 19 THEN\n    DISPLAY \"Heater on\"\nELSE\n    DISPLAY \"Off\"\nEND IF",o:["Heater on","Fan on","Off","Heater on, then Off"],e:"18 > 25 is false; 18 &lt; 19 is true, so it displays Heater on and skips the rest."},
+{id:"k07",r:"clock",c:"C3.2",d:2,q:"What does this program display? (AND needs both conditions true; OR needs at least one.)",k:"SET a TO 5\nSET b TO 12\nIF a > 3 AND b < 10 THEN\n    DISPLAY \"X\"\nELSE IF a > 3 OR b < 10 THEN\n    DISPLAY \"Y\"\nELSE\n    DISPLAY \"Z\"\nEND IF",o:["Y","X","Z","X and Y"],e:"b &lt; 10 is false, so the AND fails. a > 3 is true, so the OR passes: Y."},
+{id:"k08",r:"clock",c:"C3.1, B2.6",d:2,q:"How many numbers does this program display? (MOD gives the remainder.)",k:"REPEAT FOR n FROM 1 TO 20\n    IF n MOD 4 = 0 THEN\n        DISPLAY n\n    END IF\nEND REPEAT",o:["5","4","16","20"],e:"Remainder 0 means n is a multiple of 4: 4, 8, 12, 16, 20. That is 5 numbers."},
+{id:"k09",r:"clock",c:"C3.2",d:1,q:"How many stars does this program display?",k:"REPEAT 3 TIMES\n    REPEAT 5 TIMES\n        DISPLAY \"*\"\n    END REPEAT\nEND REPEAT",o:["15","3","8","35"],e:"The inner loop runs 5 times for each of 3 outer passes: 3 × 5 = 15."},
+{id:"k10",r:"clock",c:"C3.2",d:3,q:"What does this program display?",k:"SET c TO 0\nREPEAT FOR i FROM 1 TO 3\n    REPEAT FOR j FROM 1 TO i\n        SET c TO c + 1\n    END REPEAT\nEND REPEAT\nDISPLAY c",o:["6","3","9","12"],e:"The inner loop runs 1 time, then 2, then 3, because it goes up to i. 1 + 2 + 3 = 6."},
+{id:"k11",r:"clock",c:"C3.1",d:2,q:"What does this program display?",k:"DEFINE double(x)\n    RETURN 2 × x\nEND DEFINE\n\nDISPLAY double(double(3)) + 1",o:["13","7","12","16"],e:"Work from the inside: double(3) = 6, double(6) = 12, then + 1 = 13."},
+{id:"k12",r:"clock",c:"C3.1",d:1,q:"A program finds the area of a circle in 5 different places. Why is a subprogram a good idea?",o:["The formula is written once and reused, so the code is shorter and one fix corrects every use.","Subprograms make the computer use a more accurate value of π.","Subprograms run only once, so the program finishes faster.","Code inside a subprogram cannot have bugs."],e:"Subprograms make code modular: write once, call many times, and test or fix in one place."},
+{id:"k13",r:"clock",c:"C3.2",d:2,q:"This program should count down 10, 9, 8, ..., 1. What actually happens?",k:"SET n TO 10\nREPEAT UNTIL n = 0\n    DISPLAY n\n    SET n TO n + 1\nEND REPEAT",o:["It never stops, because n keeps growing and never equals 0.","It displays 10 to 1 correctly.","It displays only 10.","It displays 1 to 10."],e:"n goes 10, 11, 12, ... so the stop condition n = 0 is never true. Change + 1 to − 1."},
+{id:"k14",r:"clock",c:"C3.2",d:3,q:"This program should store the largest of a, b and c in big. Which input (a, b, c) shows it has a bug?",k:"IF a > b THEN\n    SET big TO a\nELSE\n    SET big TO b\nEND IF\nIF c > a THEN\n    SET big TO c\nEND IF",o:["(5, 9, 7)","(9, 5, 7)","(5, 7, 9)","(1, 2, 3)"],e:"With (5, 9, 7): big = 9, then 7 > 5 is true so big becomes 7, which is wrong. The last check should compare c with big."},
+{id:"k15",r:"clock",c:"C3.1, E1.1",d:1,q:"A robot draws an equilateral triangle. Which turn completes the program?",k:"REPEAT 3 TIMES\n    MOVE 50\n    TURN RIGHT ___ DEGREES\nEND REPEAT",o:["120","60","90","180"],e:"The robot turns 360° in total around a closed shape: 360 ÷ 3 = 120°. The 60° interior angle is not the turn."},
+{id:"k16",r:"clock",c:"C3.1, E1.1",d:2,q:"Which turn makes the robot draw a regular pentagon (5 sides)?",k:"REPEAT 5 TIMES\n    MOVE 40\n    TURN RIGHT ___ DEGREES\nEND REPEAT",o:["72","60","90","108"],e:"360 ÷ 5 = 72°. 108° is the pentagon's interior angle."},
+{id:"k17",r:"clock",c:"C3.1, E1.4",d:2,q:"A robot starts at (0, 0) facing right (east). Where does it end?",k:"MOVE 3\nTURN LEFT 90 DEGREES\nMOVE 4\nTURN LEFT 90 DEGREES\nMOVE 3",o:["(0, 4)","(3, 4)","(6, 4)","(0, −4)"],e:"East 3 to (3, 0). Turn left to face north, move to (3, 4). Turn left to face west, move 3 to (0, 4)."},
+{id:"k18",r:"clock",c:"C3.1",d:2,m:1,q:"Which program displays 5, 10, 15, ..., 50?",o:["REPEAT FOR k FROM 1 TO 10: DISPLAY k × 5","REPEAT FOR k FROM 5 TO 50: DISPLAY k","REPEAT FOR k FROM 1 TO 10: DISPLAY k + 5","REPEAT FOR k FROM 0 TO 10: DISPLAY k × 5"],e:"k × 5 for k = 1 to 10 gives exactly 5 to 50. Starting at 0 adds an extra 0; 5 to 50 displays every number."},
+{id:"k19",r:"clock",c:"C3.1, A2.1",d:2,q:"A light sensor checks the light level five times: 60, 45, 28, 35, 20. How many times does the lamp turn on?",k:"WHEN light level is checked\n    IF level < 30 THEN\n        TURN ON lamp\n    ELSE\n        TURN OFF lamp\n    END IF",o:["2","1","3","5"],e:"Only 28 and 20 are below 30, so the lamp turns on twice."},
+{id:"k20",r:"clock",c:"C3.2",d:2,m:1,q:"Which code correctly swaps the values of a and b?",o:["SET t TO a / SET a TO b / SET b TO t","SET a TO b / SET b TO a","SET t TO a / SET b TO t / SET a TO b","SET t TO b / SET a TO t / SET b TO a"],e:"A temporary variable t saves a before a is overwritten. Without it, both end up with the same value."},
+{id:"k21",r:"clock",c:"C3.1, B2.4",d:1,q:"temps holds the list −3, 5, −1, 0, 7, −6. What does this program display?",k:"SET count TO 0\nREPEAT FOR EACH t IN temps\n    IF t < 0 THEN\n        SET count TO count + 1\n    END IF\nEND REPEAT\nDISPLAY count",o:["3","2","4","6"],e:"−3, −1 and −6 are below 0. 0 is not less than 0."},
+{id:"k22",r:"clock",c:"C3.1, B2.3",d:2,q:"What does this program display?",k:"DEFINE salePrice(p, pct)\n    RETURN p − p × pct / 100\nEND DEFINE\n\nDISPLAY salePrice(60, 25)",o:["45","15","35","85"],e:"25% of 60 is 15, and 60 − 15 = 45."},
+{id:"k23",r:"clock",c:"C3.1, C1.3",d:1,q:"What is the last number this program displays?",k:"SET v TO 3\nREPEAT FOR n FROM 1 TO 5\n    DISPLAY v\n    SET v TO v + 4\nEND REPEAT",o:["19","15","20","23"],e:"It displays 3, 7, 11, 15, 19. v becomes 23 after the last display, but 23 is never shown."},
+{id:"k24",r:"clock",c:"C3.1, F1.3",d:2,q:"Maya saves for a $200 tablet. What does this program display?",k:"SET money TO 40\nSET week TO 0\nREPEAT UNTIL money ≥ 200\n    SET money TO money + 25\n    SET week TO week + 1\nEND REPEAT\nDISPLAY week",o:["7","6","8","9"],e:"40 + 25 × 6 = 190, still short. After 7 weeks: 215, which reaches 200."},
+{id:"k25",r:"clock",c:"C3.2",d:3,q:"A student reorders the checks so ≥ 60 comes first. What does a score of 85 now display?",k:"IF score ≥ 60 THEN\n    DISPLAY \"C\"\nELSE IF score ≥ 70 THEN\n    DISPLAY \"B\"\nELSE IF score ≥ 80 THEN\n    DISPLAY \"A\"\nELSE\n    DISPLAY \"Try again\"\nEND IF",o:["C","A","B","Try again"],e:"85 ≥ 60 is true, so the first branch runs and the rest are skipped. Order matters in IF / ELSE IF chains."},
+{id:"k26",r:"clock",c:"C3.2",d:1,q:"How many times does REPEAT FOR i FROM 0 TO 10 run its steps?",o:["11","9","10","12"],e:"It runs for 0, 1, 2, ..., 10. Counting the 0 gives 11 passes. This 'off by one' mix-up causes many bugs."},
+{id:"k27",r:"clock",c:"A2.1",d:1,q:"You are coding a game that calculates a score, checks for a level-up and saves progress. What is the best first step?",o:["Break the problem into smaller subprograms such as calcScore, checkLevel and saveGame.","Write all the code in one long block, then test it at the end.","Choose the colours for the game screen.","Copy the same code everywhere it is needed."],e:"Decomposing a problem into parts lets you build and test each piece separately."},
+{id:"k28",r:"clock",c:"C3.1",d:2,q:"A list holds 1000 names in random order. A program checks each name in order until it finds the one it wants. In the worst case, how many names does it check?",o:["1000","1","10","500"],e:"If the name is last or missing, every name must be checked."},
+{id:"k29",r:"clock",c:"C3.1",d:3,q:"A program guesses a secret number from 1 to 63. Each guess is the middle of the numbers still possible, and it hears 'higher' or 'lower'. What is the most guesses it could need?",o:["6","7","32","63"],e:"Each guess about halves the range: 63 → 31 → 15 → 7 → 3 → 1. That is at most 6 guesses."},
+{id:"k30",r:"clock",c:"A2.2",d:1,q:"Which is an example of artificial intelligence used in a skilled trade?",o:["A mechanic uses a diagnostic tool that learned from data on many cars to predict which part will fail.","A carpenter measures a board with a tape measure.","An electrician wears rubber gloves for safety.","A plumber uses a wrench with a longer handle."],e:"AI systems learn patterns from data and make predictions. The other tools do not learn or predict."},
+{id:"k31",r:"clock",c:"A2.2",d:2,q:"A face-recognition app was trained mostly on photos of adults. What problem is most likely?",o:["It may be less accurate for children because few children's faces were in its training data.","It will refuse to open for adults.","It will be more accurate for children because they are smaller.","It will work equally well for everyone."],e:"An AI system can only learn from the data it is given. Missing groups in the data lead to biased results."},
+{id:"k32",r:"clock",c:"C3.1, D2.2",d:2,q:"RANDOM(1, 6) acts like a die. About what value do you expect for count?",k:"SET count TO 0\nREPEAT 600 TIMES\n    SET a TO RANDOM(1, 6)\n    SET b TO RANDOM(1, 6)\n    IF a + b = 7 THEN\n        SET count TO count + 1\n    END IF\nEND REPEAT\nDISPLAY count",o:["100","7","300","600"],e:"6 of the 36 outcomes add to 7, so P = 1/6. 1/6 of 600 trials is about 100."},
+{id:"k33",r:"clock",c:"C3.2, B2.4",d:3,q:"What does this program display?",k:"SET s TO 0\nREPEAT FOR n FROM 1 TO 6\n    IF n MOD 2 = 0 THEN\n        SET s TO s + n\n    ELSE\n        SET s TO s − n\n    END IF\nEND REPEAT\nDISPLAY s",o:["3","−3","12","21"],e:"−1 + 2 − 3 + 4 − 5 + 6 = 3. Even numbers are added; odd numbers are subtracted."},
+{id:"k34",r:"clock",c:"C3.2, B2.4",d:1,q:"What does this program display?",k:"SET t TO −4\nREPEAT 3 TIMES\n    SET t TO t − 5\nEND REPEAT\nDISPLAY t",o:["−19","−11","11","19"],e:"−4 − 5 − 5 − 5 = −19."},
+{id:"k35",r:"clock",c:"C3.2, E2.5",d:2,q:"This subprogram should return the area of a circle. What is wrong?",k:"DEFINE circleArea(r)\n    RETURN 3.14 × r × 2\nEND DEFINE",o:["It multiplies r by 2 instead of by r, so it finds the circumference.","It should use 3.14 × r only.","It should add 2 instead of multiplying.","Nothing; it is correct."],e:"Area = π × r × r. The code computes π × 2r, which is the circumference."},
+{id:"k36",r:"clock",c:"C3.1, C2.4",d:2,q:"What does this program display?",k:"SET n TO 0\nREPEAT UNTIL 3 × n + 2 > 20\n    SET n TO n + 1\nEND REPEAT\nDISPLAY n",o:["7","6","8","18"],e:"At n = 6, 3(6) + 2 = 20, which is not greater than 20. At n = 7, it is 23. The loop solves 3n + 2 > 20."},
+{id:"k37",r:"clock",c:"C3.2, D2.2",d:1,q:"A coin-flip simulation repeats 10 times. What is the most efficient way to run 1000 flips?",o:["Change REPEAT 10 TIMES to REPEAT 1000 TIMES.","Copy the loop 100 times.","Run the program 100 times by hand.","Add 990 more flip lines below the loop."],e:"Changing one number in a loop is the efficient way to scale a simulation."},
+{id:"k38",r:"clock",c:"A2.1",d:1,q:"A robot arm picks up a cup. The gripper must be open before the arm moves down around the cup. Which order works?",o:["Open gripper, move arm down, close gripper, lift arm","Move arm down, open gripper, close gripper, lift arm","Close gripper, move arm down, open gripper, lift arm","Move arm down, close gripper, lift arm, open gripper"],e:"Algorithms need steps in a precise order. Opening first avoids knocking the cup over."},
+{id:"k39",r:"clock",c:"C3.2",d:3,q:"What does this program display?",k:"SET a TO 1\nSET b TO 20\nREPEAT UNTIL a > b\n    SET a TO a × 2\n    SET b TO b − 3\nEND REPEAT\nDISPLAY a, b",o:["16, 8","8, 11","16, 11","32, 5"],e:"(2, 17), (4, 14), (8, 11), (16, 8). Now 16 > 8, so the loop stops."},
+{id:"k40",r:"clock",c:"C3.2",d:2,q:"What does this program display?",k:"SET word TO \"\"\nREPEAT 3 TIMES\n    SET word TO word + \"ab\"\nEND REPEAT\nDISPLAY word",o:["ababab","ab","abab","aaabbb"],e:"+ joins text. Each pass adds 'ab' to the end: ab, abab, ababab."},
+{id:"k41",r:"clock",c:"C3.1, F1.5",d:3,q:"What does this program display (rounded to the nearest dollar)?",k:"SET balance TO 100\nREPEAT 2 TIMES\n    SET balance TO balance + balance × 10 / 100\nEND REPEAT\nDISPLAY balance",o:["$121","$110","$120","$200"],e:"Year 1: 100 + 10 = 110. Year 2: 110 + 11 = 121. Interest is earned on interest, so it is more than $120."},
+{id:"k42",r:"clock",c:"C3.2",d:2,q:"Which input makes this program display \"Ready\"?",k:"INPUT battery\nINPUT connected\nIF battery > 20 AND connected = \"yes\" THEN\n    DISPLAY \"Ready\"\nELSE\n    DISPLAY \"Check device\"\nEND IF",o:["battery = 45, connected = \"yes\"","battery = 20, connected = \"yes\"","battery = 90, connected = \"no\"","battery = 15, connected = \"no\""],e:"Both conditions must be true. 20 is not greater than 20."},
+// ===== COINFORGE: number and financial literacy =====
+{id:"n01",r:"coin",c:"B1.1",d:1,q:"In 7 482 015 360, what is the value of the digit 8?",o:["80 000 000","80 000","8 000 000","800 000 000"],e:"Reading from the left: 7 billions, 4 hundred millions, 8 ten millions. 8 ten millions = 80 000 000."},
+{id:"n02",r:"coin",c:"B1.1",d:1,q:"Which is equal to 3.6 million?",o:["3.6 × 10⁶","3.6 × 10⁵","36 × 10⁶","3.6 × 10⁹"],e:"1 million = 10⁶, so 3.6 million = 3.6 × 10⁶ = 3 600 000."},
+{id:"n03",r:"coin",c:"B1.2",d:1,q:"Between which two whole numbers is √70?",o:["8 and 9","6 and 7","7 and 8","34 and 35"],e:"8 × 8 = 64 and 9 × 9 = 81. 70 is between them, so √70 is between 8 and 9."},
+{id:"n04",r:"coin",c:"B1.2, E2.2",d:2,q:"A square patio has an area of 81 m². How much fencing goes all the way around it?",o:["36 m","9 m","20.25 m","324 m"],e:"Side = √81 = 9 m. Perimeter = 4 × 9 = 36 m."},
+{id:"n05",r:"coin",c:"B2.7, B1.2",d:2,q:"What is 2⁵ − √81 + 3²?",o:["32","7","14","50"],e:"2⁵ = 32, √81 = 9, 3² = 9. 32 − 9 + 9 = 32."},
+{id:"n06",r:"coin",c:"B2.6",d:2,q:"What is the largest square tile that can cover a 48 cm by 60 cm board with no cutting?",o:["12 cm","4 cm","6 cm","240 cm"],e:"The tile side must divide both 48 and 60. The greatest common factor is 12."},
+{id:"n07",r:"coin",c:"B2.6",d:2,q:"Three lights flash together, then every 4 s, 6 s and 10 s. How long until they all flash together again?",o:["60 s","20 s","30 s","240 s"],e:"The lowest common multiple of 4, 6 and 10 is 60."},
+{id:"n08",r:"coin",c:"B2.4",d:1,q:"At 6 a.m. it was −7°C. It warmed by 12° by noon, then cooled by 9° by midnight. What was the midnight temperature?",o:["−4°C","−28°C","−10°C","14°C"],e:"−7 + 12 = 5, then 5 − 9 = −4."},
+{id:"n09",r:"coin",c:"B2.4",d:2,q:"A submarine at −120 m rises 45 m, then dives 80 m. What is its final depth?",o:["−155 m","−245 m","−85 m","5 m"],e:"−120 + 45 = −75. Then −75 − 80 = −155."},
+{id:"n10",r:"coin",c:"B2.5",d:1,q:"What is 2/3 + 3/4?",o:["1 5/12","5/7","5/12","1 1/12"],e:"8/12 + 9/12 = 17/12 = 1 5/12."},
+{id:"n11",r:"coin",c:"B2.5",d:2,q:"What is 3 1/4 − 1 2/3?",o:["1 7/12","1 5/12","2 5/12","2 1/12"],e:"13/4 − 5/3 = 39/12 − 20/12 = 19/12 = 1 7/12."},
+{id:"n12",r:"coin",c:"B2.8",d:2,q:"Jordan eats 3/4 of a 2/3 kg block of cheese. How much does he eat?",o:["1/2 kg","5/7 kg","6/7 kg","1 1/8 kg"],e:"3/4 × 2/3 = 6/12 = 1/2 kg."},
+{id:"n13",r:"coin",c:"B2.8",d:2,q:"How many 1/6-hour practice sessions fit in 2 1/2 hours?",o:["15","5/12","10","12"],e:"2 1/2 ÷ 1/6 = 5/2 × 6 = 15."},
+{id:"n14",r:"coin",c:"B2.9",d:1,q:"What is 0.4 × 0.25?",o:["0.1","0.01","0.65","1"],e:"4 × 25 = 100, and there are 3 decimal places in total, so 0.100 = 0.1."},
+{id:"n15",r:"coin",c:"B2.9",d:2,q:"Gas costs $1.55 per litre. How many litres can you buy for $31?",o:["20","2","48.05","200"],e:"31 ÷ 1.55 = 3100 ÷ 155 = 20."},
+{id:"n16",r:"coin",c:"B1.6",d:1,q:"Round 18.4965 to the nearest hundredth.",o:["18.50","18.40","18.49","18.497"],e:"The hundredths digit is 9 and the next digit is 6, so round up: 18.49 → 18.50."},
+{id:"n17",r:"coin",c:"B2.3",d:1,q:"Increase 360 by 5%.",o:["378","365","380","396"],e:"10% of 360 is 36, so 5% is 18. 360 + 18 = 378."},
+{id:"n18",r:"coin",c:"B1.7, B2.2",d:1,q:"Which is equal to 0.375?",o:["3/8","3/75","37/100","3.75%"],e:"1/8 = 0.125, so 3/8 = 0.375. As a percent it is 37.5%."},
+{id:"n19",r:"coin",c:"B2.10",d:2,q:"Paint is mixed blue to white in the ratio 2 : 5. How much blue goes with 14 L of white?",o:["5.6 L","2.8 L","7 L","35 L"],e:"14 ÷ 5 = 2.8 L per part. Blue is 2 parts: 5.6 L."},
+{id:"n20",r:"coin",c:"B2.10",d:2,q:"Which is the best buy?",o:["8 bars for $5.20","6 bars for $4.20","10 bars for $7.00","12 bars for $8.16"],e:"Unit prices: $0.65, $0.70, $0.70, $0.68. The lowest is 8 for $5.20."},
+{id:"n21",r:"coin",c:"B2.10",d:2,q:"Which situation is proportional?",o:["The cost of apples at $3.50 per kilogram","A taxi with a $4 starting fee plus $2 per km","A phone plan of $25 a month plus $5 per GB","A person's age and height"],e:"Proportional means zero gives zero and the rate is constant. Starting fees break proportionality."},
+{id:"n22",r:"coin",c:"B2.1",d:2,q:"What is 20 − 4 × 3 + 6 ÷ 2?",o:["11","51","5","27"],e:"Multiply and divide first: 12 and 3. Then 20 − 12 + 3 = 11."},
+{id:"n23",r:"coin",c:"B1.3",d:1,q:"Which number is the smallest?",o:["−1.25","−1.2","−1/2","−1.205"],e:"On a number line, the number farthest left is smallest: −1.25 &lt; −1.205 &lt; −1.2 &lt; −0.5."},
+{id:"f01",r:"coin",c:"F1.1",d:1,q:"€1 is worth C$1.50. A shirt costs €24. What is that in Canadian dollars?",o:["$36","$16","$25.50","$37.50"],e:"Each euro is $1.50, so 24 × 1.50 = $36."},
+{id:"f02",r:"coin",c:"F1.1",d:2,q:"US$1 = C$1.40. Headphones cost US$80 online or C$105 in a Toronto store. Which statement is true?",o:["The Toronto store is cheaper by $7.","The online price is cheaper by $25.","The online price is cheaper by $7.","They cost the same."],e:"80 × 1.40 = C$112. 112 − 105 = $7, so the store is cheaper."},
+{id:"f03",r:"coin",c:"F1.5",d:1,q:"You save $500 at 4% simple interest per year for 3 years. How much interest do you earn?",o:["$60","$20","$120","$560"],e:"4% of 500 = $20 per year. 3 years: $60."},
+{id:"f04",r:"coin",c:"F1.5, F1.6",d:2,q:"You borrow $1000 for one year. How much more interest do you pay at 20% than at 5%?",o:["$150","$15","$250","$1500"],e:"20% = $200 and 5% = $50. The difference is $150. High rates make borrowing costly."},
+{id:"f05",r:"coin",c:"F1.3",d:2,q:"Noor earns $120 a month, spends $45 on needs and $30 on wants, and saves the rest. How many months to save $300?",o:["7","3","6","10"],e:"She saves 120 − 45 − 30 = $45 a month. 300 ÷ 45 ≈ 6.7, so she needs 7 months."},
+{id:"f06",r:"coin",c:"F1.2",d:1,q:"Which is the most reliable source for comparing savings accounts?",o:["Banks' official websites and the Financial Consumer Agency of Canada","A video by an influencer paid by one bank","A friend's guess","An ad promising guaranteed riches"],e:"Official and independent government sources show real rates and fees, with no reason to mislead."},
+{id:"f07",r:"coin",c:"F1.4",d:1,q:"A shopping app shows 'Only 2 left! Sale ends in 10 minutes!' Which influence is it using?",o:["Urgency and scarcity, to make you buy before you compare","A reliable source of price information","Peer pressure from your friends","A government rule about sales"],e:"Countdown timers and 'only a few left' push quick decisions. Pausing to compare beats the pressure."},
+// ===== RIDDLE SPIRE: patterns and algebra =====
+{id:"a01",r:"spire",c:"C2.1",d:1,q:"Simplify 3x + 5 + 2x − 1.",o:["5x + 4","5x + 6","9x","6x + 4"],e:"Combine like terms: 3x + 2x = 5x and 5 − 1 = 4."},
+{id:"a02",r:"spire",c:"C2.1",d:1,q:"Simplify 4n + 7n − 3n.",o:["8n","14n","8","8n³"],e:"4 + 7 − 3 = 8, so 8n. The variable stays the same."},
+{id:"a03",r:"spire",c:"C2.2",d:1,q:"Evaluate 4p − 2.5 when p = 3.5.",o:["11.5","4","14","16.5"],e:"4 × 3.5 = 14, then 14 − 2.5 = 11.5."},
+{id:"a04",r:"spire",c:"C2.3",d:1,q:"Solve 5x − 7 = 38.",o:["9","6.2","31","45"],e:"Add 7: 5x = 45. Divide by 5: x = 9. Check: 45 − 7 = 38."},
+{id:"a05",r:"spire",c:"C2.3",d:2,q:"Solve 0.5n + 2.4 = 6.9.",o:["9","2.25","4.5","18.6"],e:"Subtract 2.4: 0.5n = 4.5. Divide by 0.5: n = 9."},
+{id:"a06",r:"spire",c:"C2.3",d:2,q:"Solve 7y − 4 = 3y + 20.",o:["6","1.6","4","24"],e:"Subtract 3y: 4y − 4 = 20. Add 4: 4y = 24, so y = 6."},
+{id:"a07",r:"spire",c:"C2.3",d:2,q:"Which value of k makes 3(k + 2) = 27 true?",o:["7","8.33","9","23"],e:"Divide both sides by 3: k + 2 = 9, so k = 7. Check: 3 × 9 = 27."},
+{id:"a08",r:"spire",c:"C2.4",d:2,q:"What is the largest whole number n for which 4n + 3 ≤ 31?",o:["7","6","8","8.5"],e:"4n ≤ 28, so n ≤ 7. Check: 4(7) + 3 = 31, which is allowed by ≤."},
+{id:"a09",r:"spire",c:"C2.4",d:2,q:"How is the solution of 2x − 5 > 9 shown on a number line?",o:["An open circle at 7 with an arrow to the right","A closed circle at 7 with an arrow to the right","An open circle at 2 with an arrow to the right","An open circle at 7 with an arrow to the left"],e:"2x > 14, so x > 7. Open circle because 7 itself is not included."},
+{id:"a10",r:"spire",c:"C2.4",d:2,q:"A fair costs $8 to enter and $1.50 per ride. You have $20. What is the greatest number of rides you can take?",o:["8","7","13","18"],e:"8 + 1.5r ≤ 20, so 1.5r ≤ 12 and r ≤ 8."},
+{id:"a11",r:"spire",c:"C1.2",d:2,q:"Term 1 = 2.5, term 2 = 4, term 3 = 5.5, term 4 = 7. Which expression gives term n?",o:["1.5n + 1","n + 1.5","2.5n","1.5n + 2.5"],e:"The rate is 1.5. At n = 1: 1.5 + 1 = 2.5. So 1.5n + 1."},
+{id:"a12",r:"spire",c:"C1.1",d:3,q:"Plan X costs $20 to join plus $5 a week. Plan Y costs $8 a week with no fee. Which statement is true?",o:["Plan Y is cheaper for the first 6 weeks; Plan X is cheaper from week 7 on.","Plan X is always cheaper.","Plan Y is always cheaper.","The plans cost the same at week 4."],e:"X = 20 + 5w and Y = 8w. Week 6: X = 50, Y = 48. Week 7: X = 55, Y = 56."},
+{id:"a13",r:"spire",c:"C1.3, C1.4",d:2,q:"Pattern: 50, 43, 36, 29, ... What is the first negative term?",o:["−6","−13","−7","−1"],e:"Keep subtracting 7: 22, 15, 8, 1, −6."},
+{id:"a14",r:"spire",c:"C1.3",d:1,q:"A repeating pattern goes red, blue, green, green, yellow, red, blue, ... What is the 50th colour?",o:["yellow","red","blue","green"],e:"The core has 5 colours. 50 ÷ 5 = 10 exactly, so term 50 is the last colour of the core: yellow."},
+{id:"a15",r:"spire",c:"C1.4",d:2,q:"Pattern: 7, 4, 1, −2, ... What is term 10?",o:["−20","−23","−17","20"],e:"Term n = 7 − 3(n − 1). Term 10 = 7 − 27 = −20."},
+{id:"a16",r:"spire",c:"C2.2",d:1,q:"Tickets cost $12 each plus one $5 booking fee per order. Which expression gives the cost of t tickets?",o:["12t + 5","5t + 12","17t","12(t + 5)"],e:"$12 for each of t tickets is 12t; the fee is added once."},
+{id:"a17",r:"spire",c:"C2.3",d:2,q:"Amir is 3 years older than twice his sister's age. Amir is 19. How old is his sister?",o:["8","8.5","11","32"],e:"2s + 3 = 19, so 2s = 16 and s = 8."},
+{id:"a18",r:"spire",c:"C1.1",d:1,q:"Which pattern is a linear growing pattern?",o:["3, 7, 11, 15, 19","2, 4, 8, 16, 32","1, 4, 9, 16, 25","5, 5, 6, 6, 7"],e:"A linear pattern grows by the same amount each time (here +4)."},
+// ===== GLASS LABYRINTH: spatial sense =====
+{id:"g01",r:"glass",c:"E1.1",d:1,q:"How many edges does a pentagonal prism have?",o:["15","7","10","12"],e:"Two pentagons have 5 edges each (10), plus 5 edges joining them: 15."},
+{id:"g02",r:"glass",c:"E1.1",d:1,q:"How many faces, edges and vertices does a square-based pyramid have?",o:["5 faces, 8 edges, 5 vertices","5 faces, 9 edges, 6 vertices","4 faces, 6 edges, 4 vertices","6 faces, 12 edges, 8 vertices"],e:"1 square + 4 triangles = 5 faces; 4 base edges + 4 slanted edges = 8; 4 base corners + 1 apex = 5."},
+{id:"g03",r:"glass",c:"E1.1",d:2,q:"A regular hexagonal prism is turned about the line through the centres of its two hexagons. What is its order of rotational symmetry?",o:["6","2","3","12"],e:"It looks the same after every 60° turn: 360 ÷ 60 = 6."},
+{id:"g04",r:"glass",c:"E1.1",d:2,q:"How many planes of symmetry does a cylinder have?",o:["Infinitely many","1","2","3"],e:"Every vertical plane through the centre is a plane of symmetry, and so is the horizontal one through the middle."},
+{id:"g05",r:"glass",c:"E1.2",d:2,q:"An object's front and side views are triangles and its top view is a square with both diagonals drawn. What is it?",o:["Square-based pyramid","Cone","Triangular prism","Cube"],e:"The diagonals in the top view are the slanted edges meeting at the apex."},
+{id:"g06",r:"glass",c:"E1.2, E2.2",d:2,q:"A floor plan uses a scale of 1 : 50. A room is 6.5 m long. How long is it on the plan?",o:["13 cm","1.3 cm","3.25 cm","130 cm"],e:"6.5 m = 650 cm. 650 ÷ 50 = 13 cm."},
+{id:"g07",r:"glass",c:"E1.3",d:2,q:"A triangle is dilated by a scale factor of 3 about the origin. Where does vertex (4, 1) go?",o:["(12, 3)","(7, 4)","(12, 1)","(4/3, 1/3)"],e:"Multiply both coordinates by 3."},
+{id:"g08",r:"glass",c:"E1.3",d:1,q:"A shape is dilated by a scale factor of 1/2. Which statement is true?",o:["The angles stay the same and each side is half as long.","The angles are halved and the sides stay the same.","The sides and the angles are both halved.","The area is halved."],e:"Dilations make similar shapes: same angles, sides in proportion. Area becomes 1/4."},
+{id:"g09",r:"glass",c:"E1.4",d:2,q:"Point (3, 1) is rotated 90° clockwise about the origin. Where is its image?",o:["(1, −3)","(−1, 3)","(−3, −1)","(−3, 1)"],e:"A 90° clockwise turn sends (x, y) to (y, −x)."},
+{id:"g10",r:"glass",c:"E1.4",d:1,q:"A(−2, 5) is translated to A′(3, 1). Which describes the translation?",o:["5 units right and 4 units down","5 units left and 4 units up","1 unit right and 6 units down","4 units right and 5 units down"],e:"x: −2 → 3 is +5 (right). y: 5 → 1 is −4 (down)."},
+{id:"g11",r:"glass",c:"E1.4",d:1,q:"Point (4, −6) is reflected in the y-axis. Where is its image?",o:["(−4, −6)","(4, 6)","(−4, 6)","(−6, 4)"],e:"Reflecting in the y-axis changes the sign of x only."},
+{id:"g12",r:"glass",c:"E2.3",d:1,q:"A bike wheel has a diameter of 70 cm. How far does it roll in one full turn? (π ≈ 3.14)",o:["219.8 cm","109.9 cm","439.6 cm","3846.5 cm"],e:"One turn = circumference = π × d = 3.14 × 70 = 219.8 cm."},
+{id:"g13",r:"glass",c:"E2.5",d:2,q:"A pizza has a diameter of 30 cm. What is its area? (π ≈ 3.14)",o:["706.5 cm²","94.2 cm²","47.1 cm²","2826 cm²"],e:"r = 15. A = 3.14 × 15 × 15 = 706.5 cm²."},
+{id:"g14",r:"glass",c:"E2.5",d:2,q:"If the radius of a circle doubles, what happens to its area?",o:["It becomes 4 times as large.","It doubles.","It becomes 3 times as large.","It stays the same."],e:"A = π × r × r. Doubling r multiplies the area by 2 × 2 = 4."},
+{id:"g15",r:"glass",c:"E2.6",d:2,q:"A cylinder's net is two circles and a rectangle. If r = 3 cm and h = 10 cm, how long is the rectangle? (π ≈ 3.14)",o:["18.84 cm","9.42 cm","28.26 cm","30 cm"],e:"The rectangle wraps around the circle, so its length is the circumference: 2 × 3.14 × 3 = 18.84 cm."},
+{id:"g16",r:"glass",c:"E2.6",d:3,q:"What is the surface area of a closed cylinder with r = 2 cm and h = 5 cm? (π ≈ 3.14)",o:["87.92 cm²","62.8 cm²","75.36 cm²","113.04 cm²"],e:"Two circles: 2 × 3.14 × 4 = 25.12. Curved part: 2 × 3.14 × 2 × 5 = 62.8. Total 87.92 cm²."},
+{id:"g17",r:"glass",c:"E2.7",d:2,q:"A triangular prism has a triangle base 6 cm wide and 4 cm high, and is 10 cm long. What is its volume?",o:["120 cm³","20 cm³","60 cm³","240 cm³"],e:"Base area = 6 × 4 ÷ 2 = 12 cm². Volume = 12 × 10 = 120 cm³."},
+{id:"g18",r:"glass",c:"E2.7",d:3,q:"A cylinder has a volume of 628 cm³ and a radius of 5 cm. What is its height? (π ≈ 3.14)",o:["8 cm","4 cm","25.12 cm","40 cm"],e:"Base area = 3.14 × 25 = 78.5 cm². Height = 628 ÷ 78.5 = 8 cm."},
+{id:"g19",r:"glass",c:"E2.1",d:2,q:"A container is 20 cm × 10 cm × 10 cm. How many 250 mL cups can it fill?",o:["8","0.8","80","800"],e:"Volume = 2000 cm³ = 2000 mL. 2000 ÷ 250 = 8."},
+{id:"g20",r:"glass",c:"E2.2",d:2,q:"A rectangle is 2.5 m by 40 cm. What is its area in square centimetres?",o:["10 000 cm²","100 cm²","1000 cm²","100 000 cm²"],e:"Convert first: 2.5 m = 250 cm. 250 × 40 = 10 000 cm²."},
+{id:"g21",r:"glass",c:"E2.1",d:1,q:"Which statement describes the difference between volume and capacity?",o:["Volume is the space an object takes up; capacity is how much a container can hold.","Volume is for liquids; capacity is for solids.","They mean exactly the same thing.","Capacity is measured in cm and volume in mL."],e:"A juice box has a volume (its space) and a capacity (how much juice fits). 1 cm³ holds 1 mL."},
+// ===== ORACLE'S MARKET: data and probability =====
+{id:"d01",r:"oracle",c:"D1.1",d:1,q:"Why do reports say '62% of Canadians' instead of giving a count?",o:["Percentages let you compare groups of very different sizes.","Percentages are always more accurate than counts.","Counts cannot be used for large groups.","Percentages hide the real data."],e:"A percent shows each part out of 100, so a city and a country can be compared fairly."},
+{id:"d02",r:"oracle",c:"D1.2",d:1,q:"Which is continuous quantitative data?",o:["The time each runner takes to finish a race","The number of siblings each student has","Each student's favourite sport","The brand of each student's shoes"],e:"Time can take any value in a range (12.37 s). Counts of siblings are discrete; sports and brands are qualitative."},
+{id:"d03",r:"oracle",c:"D1.5",d:2,q:"The mean of 5 numbers is 12. A sixth number raises the mean to 13. What is the sixth number?",o:["18","13","14","25"],e:"Total before: 5 × 12 = 60. Total after: 6 × 13 = 78. The new number is 78 − 60 = 18."},
+{id:"d04",r:"oracle",c:"D1.5",d:1,q:"What is the median of 4, 9, 2, 7, 5, 10?",o:["6","5","6.17","7"],e:"Sort: 2, 4, 5, 7, 9, 10. The middle two are 5 and 7, so the median is 6."},
+{id:"d05",r:"oracle",c:"D1.5",d:2,q:"The outlier 95 is removed from 12, 15, 15, 18, 95. Which measure changes the most?",o:["The mean","The median","The mode","They all change equally"],e:"Mean drops from 31 to 15. Median drops from 15 to 15. Mode stays 15."},
+{id:"d06",r:"oracle",c:"D1.3, D1.6",d:2,q:"A circle graph of 200 students shows 'walk' as a 54° sector. How many students walk?",o:["30","15","54","108"],e:"54 ÷ 360 = 0.15 = 15%. 15% of 200 = 30."},
+{id:"d07",r:"oracle",c:"D1.3",d:1,q:"Which graph best shows how a puppy's mass changed each month for a year?",o:["Broken-line graph","Circle graph","Pictograph","Stem-and-leaf plot"],e:"Line graphs show change over time. Circle graphs show parts of a whole."},
+{id:"d08",r:"oracle",c:"D1.6",d:2,q:"Sales grew from 100 to 110, but the graph draws the second box twice as tall and twice as wide. Why is that misleading?",o:["The box's area grows 4 times, so a 10% increase looks huge.","The boxes should be circles.","The graph should not show sales.","Nothing; the numbers are correct."],e:"Our eyes compare areas. Doubling both dimensions quadruples the area."},
+{id:"d09",r:"oracle",c:"D2.1",d:1,q:"Which pair of events is dependent?",o:["Taking a card, keeping it, then taking another from the same deck","Flipping a coin, then rolling a die","Rolling a die twice","Spinning a spinner, then flipping a coin"],e:"Keeping the first card changes what is left, so the second probability depends on the first result."},
+{id:"d10",r:"oracle",c:"D2.2",d:2,q:"Two dice are rolled. What is the probability that the sum is 7?",o:["1/6","1/12","7/36","1/2"],e:"Six pairs make 7: (1,6) (2,5) (3,4) (4,3) (5,2) (6,1). 6/36 = 1/6."},
+{id:"d11",r:"oracle",c:"D2.2",d:1,q:"A coin lands heads 14 times in 20 flips. Which statement is true?",o:["The experimental probability is 70%; with many more flips it would likely move closer to 50%.","The coin must be unfair.","The theoretical probability of heads is now 70%.","The next flip will probably be tails."],e:"Small samples vary. Each flip is independent, and long runs settle near 1/2."},
+{id:"d12",r:"oracle",c:"D2.2",d:3,q:"A box has 4 green and 6 yellow candies. You take two without replacing the first. What is the probability both are green?",o:["2/15","4/25","1/5","2/5"],e:"4/10 × 3/9 = 12/90 = 2/15."},
+{id:"d13",r:"oracle",c:"D2.2",d:1,q:"You spin a spinner with 3 equal colours and flip a coin. How many outcomes are possible?",o:["6","5","8","9"],e:"Each of 3 colours pairs with heads or tails: 3 × 2 = 6."},
+{id:"d14",r:"oracle",c:"D1.4, D1.6",d:1,q:"An infographic says '1 in 4 students bike to school.' Which addition makes it most trustworthy?",o:["The source, sample size and date of the survey","Brighter colours","A bigger title","A photo of a bicycle"],e:"Knowing who was asked, how many and when lets readers judge the claim."},
+// ===== VERDANT WILDS: interactions in the environment =====
+{id:"l01",r:"wilds",c:"B2.1",d:1,q:"Which best defines an ecosystem?",o:["A network of interactions among living things and their non-living environment","All the animals that live in one place","The weather in a region","A group of plants of the same species"],e:"An ecosystem includes biotic parts (organisms) and abiotic parts (water, soil, light) and how they interact."},
+{id:"l02",r:"wilds",c:"B2.2",d:1,q:"Which is an abiotic factor?",o:["Sunlight","Mushrooms","Earthworms","Pollen"],e:"Abiotic means non-living. Pollen and mushrooms come from living things."},
+{id:"l03",r:"wilds",c:"B2.3",d:1,q:"In a lake, which organisms are producers?",o:["Algae","Minnows","Bacteria on dead fish","Loons"],e:"Producers make their own food by photosynthesis."},
+{id:"l04",r:"wilds",c:"B2.3",d:1,q:"A black bear eats berries and fish. What is it?",o:["An omnivore","A herbivore","A producer","A decomposer"],e:"It eats both plants and animals, so it is an omnivorous consumer."},
+{id:"l05",r:"wilds",c:"B2.4",d:2,q:"Why are there usually fewer top predators than herbivores?",o:["Energy is lost at each level, so less is available to support animals higher in the chain.","Predators are less healthy than herbivores.","Herbivores eat the predators' food.","Predators need less energy."],e:"Only about 10% of energy passes up each level. Less energy supports fewer animals."},
+{id:"l06",r:"wilds",c:"B1.1, B2.4",d:3,q:"A pesticide sprayed on crops is found in the highest amounts in hawks. Why?",o:["It builds up because each predator eats many prey that already contain it.","Hawks spray the crops.","Hawks drink more water than other animals.","The pesticide is made inside the hawks' bodies."],e:"This is biomagnification: the amount increases at each level of the food chain."},
+{id:"l07",r:"wilds",c:"B2.5",d:2,q:"Which process returns carbon dioxide to the air?",o:["Respiration by plants, animals and decomposers","Photosynthesis","Evaporation of lakes","Burying dead leaves deep underground"],e:"Living things release CO₂ when they use food for energy. Photosynthesis removes CO₂."},
+{id:"l08",r:"wilds",c:"B2.7",d:2,q:"A deer population with no predators stops growing. What is the most likely reason?",o:["Limited food, water and space set a carrying capacity.","Deer stop reproducing when there are no predators.","Abiotic factors never affect deer.","More predators arrive instantly."],e:"Limiting factors cap how many organisms an ecosystem can sustain."},
+{id:"l09",r:"wilds",c:"B2.6",d:2,q:"After a forest fire, which order of regrowth is most likely?",o:["Grasses, then shrubs, then fast-growing trees, then a mature forest","Mature forest, then shrubs, then grasses","Lichens on bare rock, then soil forms, then grasses","Trees first, then grasses under them"],e:"Soil survives a fire, so secondary succession starts with fast-growing grasses."},
+{id:"l10",r:"wilds",c:"B1.2",d:2,q:"Which strategy best reduces harm to fish from farm runoff?",o:["Planting strips of native plants along stream banks","Adding more fertilizer so crops grow faster","Removing all trees near the stream","Draining the stream in summer"],e:"Plant buffer strips trap soil and absorb extra nutrients before they reach the water."},
+{id:"l11",r:"wilds",c:"B1.1, B2.7",d:2,q:"Zebra mussels spread quickly in the Great Lakes. Why?",o:["They have few natural predators there and outcompete native species for food.","They are producers that make their own food.","The lakes are too cold for native species.","They are the only animals that eat algae."],e:"Invasive species often lack the predators and diseases that control them in their home range."},
+{id:"l12",r:"wilds",c:"B1.3",d:1,q:"Many Indigenous harvesting practices take only what is needed and leave some plants to regrow. Why does this support sustainability?",o:["Populations can keep reproducing, so the resource lasts for future generations.","It makes plants grow faster than normal.","It removes the need for any soil nutrients.","It means animals no longer need the plants."],e:"Leaving enough to regrow keeps the ecosystem in balance over time."},
+// ===== ALCHEMIST'S VAULT: pure substances and mixtures =====
+{id:"m01",r:"alch",c:"C2.1",d:1,q:"Which statement is part of the particle theory of matter?",o:["Particles are always moving, and they move faster when heated.","Particles grow larger when heated.","Particles are only in solids.","There is no space between particles in a gas."],e:"All matter is made of tiny particles with spaces between them, always moving and attracting each other."},
+{id:"m02",r:"alch",c:"C2.2",d:1,q:"Using particle theory, what is a pure substance?",o:["Matter made of only one kind of particle","Matter that is clear","Matter that comes from nature","Matter with two or more kinds of particles"],e:"Pure substances have one kind of particle. Mixtures contain two or more."},
+{id:"m03",r:"alch",c:"C2.4",d:1,q:"In salt water, which is the solute and which is the solvent?",o:["Salt is the solute and water is the solvent.","Water is the solute and salt is the solvent.","Both are solvents.","Salt water is the solute."],e:"The solute dissolves; the solvent does the dissolving."},
+{id:"m04",r:"alch",c:"C2.4",d:1,q:"Which sugar will dissolve fastest?",o:["Crushed sugar in hot water, stirred","A sugar cube in cold water, not stirred","A sugar cube in hot water, not stirred","Crushed sugar in cold water, not stirred"],e:"Smaller pieces, higher temperature and stirring all bring particles into contact faster."},
+{id:"m05",r:"alch",c:"C2.5",d:2,q:"25 g of sugar is dissolved in 250 mL of water. What is the concentration?",o:["0.1 g/mL","1 g/mL","6.25 g/mL","10 g/mL"],e:"25 ÷ 250 = 0.1 g per mL, which is the same as 10 g per 100 mL."},
+{id:"m06",r:"alch",c:"C2.5",d:1,q:"How can you tell that a solution is saturated?",o:["Extra solute added at the same temperature stays undissolved.","It changes colour.","It is very hot.","It has no solute in it."],e:"A saturated solution holds the most solute it can at that temperature."},
+{id:"m07",r:"alch",c:"C2.7",d:1,q:"Which method gets pure water from salt water?",o:["Distillation","Filtration","Using a magnet","Sifting"],e:"Boiling turns water to vapour, which is cooled back to liquid. The salt stays behind."},
+{id:"m08",r:"alch",c:"C2.7",d:2,q:"Which method shows that black marker ink is a mixture of dyes?",o:["Paper chromatography","Filtration","Evaporation","Magnetism"],e:"Water carries each dye up the paper at a different speed, so the colours separate."},
+{id:"m09",r:"alch",c:"C1.2",d:2,q:"Some gold mines separate gold from rock using cyanide. What is a major environmental risk?",o:["Toxic waste can leak into rivers and harm people and wildlife.","The gold becomes radioactive.","It uses up all the oxygen in the air.","There are no risks because gold is natural."],e:"Separation methods must contain chemical waste to protect water and communities."},
+{id:"m10",r:"alch",c:"C2.8",d:1,q:"Why is water (H₂O) a compound?",o:["Its particles contain two different kinds of atoms chemically joined.","It is a liquid at room temperature.","It is made of only one kind of atom.","It can dissolve many things."],e:"Each water molecule has 2 hydrogen atoms and 1 oxygen atom bonded together."},
+{id:"m11",r:"alch",c:"C1.1",d:1,q:"Why should old phones go to an e-waste depot instead of the garbage?",o:["They contain toxic substances that can leak into soil and water, and metals that can be recovered.","They are too heavy for garbage trucks.","Phones can be refilled with new batteries at the depot.","It is the only place phones can be charged."],e:"Devices hold lead, mercury and valuable metals such as gold and copper."},
+{id:"m12",r:"alch",c:"C2.3",d:2,q:"Which is a homogeneous mixture?",o:["Brass (copper and zinc melted together)","Granola","Sand and water","Pizza"],e:"Brass looks the same throughout. It is an alloy, a solid solution."},
+// ===== TITAN'S BRIDGE: structures =====
+{id:"t01",r:"titan",c:"D2.1",d:1,q:"What type of structure is a hydro transmission tower?",o:["Frame structure","Solid structure","Shell structure","Liquid structure"],e:"It is a skeleton of metal parts joined together to carry loads."},
+{id:"t02",r:"titan",c:"D2.1",d:1,q:"What type of structure is a concrete dam?",o:["Solid structure","Frame structure","Shell structure","Hollow structure"],e:"A dam's mass of solid material resists the push of the water."},
+{id:"t03",r:"titan",c:"D2.3",d:1,q:"Which internal force acts on a rope in tug-of-war?",o:["Tension","Compression","Shear","Torsion"],e:"Pulling on both ends stretches the rope."},
+{id:"t04",r:"titan",c:"D2.3",d:1,q:"Scissors cutting paper apply which force?",o:["Shear","Tension","Compression","Torsion"],e:"Shear forces push parts of a material in opposite directions along a plane."},
+{id:"t05",r:"titan",c:"D2.3",d:1,q:"Wringing out a wet towel applies which force?",o:["Torsion","Tension","Shear","Compression"],e:"Torsion is a twisting force."},
+{id:"t06",r:"titan",c:"D2.3",d:2,q:"A 600 N person stands in the middle of a park bench. Which describes the force on the bench?",o:["Magnitude 600 N, pointing down, applied at the middle of the seat","Magnitude 60 N, pointing up, applied at the legs","Magnitude 600 N, pointing sideways, applied at one end","No force, because the bench does not move"],e:"A force is described by its size, direction and point of application."},
+{id:"t07",r:"titan",c:"D2.4",d:2,q:"Why are most bridges symmetrical?",o:["Symmetry spreads loads evenly to both sides, which helps keep the structure stable.","Symmetrical bridges use more material.","Symmetry is only for looks.","Symmetrical bridges cannot fail."],e:"Balanced forces on each side reduce stress on any one part."},
+{id:"t08",r:"titan",c:"D2.5",d:2,q:"What most likely causes an old wooden deck to fail?",o:["Rot and repeated loads weakening the wood over time","Painting it a light colour","Building it on a level surface","Using too many screws"],e:"Material decay and fatigue from repeated stress are common causes of failure."},
+{id:"t09",r:"titan",c:"D2.6",d:2,q:"Which material best suits a bike frame that must be strong, light and rust-resistant?",o:["Aluminium","Cast iron","Pine wood","Glass"],e:"Aluminium is light, strong and does not rust."},
+{id:"t10",r:"titan",c:"D1.2",d:1,q:"Which change makes a computer desk more ergonomic?",o:["Put the top of the screen at about eye level and keep wrists straight while typing.","Raise the keyboard to chin height.","Sit as far from the screen as possible.","Use a chair with no back support."],e:"Ergonomic design fits the space to the body and reduces strain."},
+{id:"t11",r:"titan",c:"D2.7",d:2,q:"Engineers attach sensors to a bridge that measure tiny movements. How does this help?",o:["It finds damage early so repairs happen before the bridge fails.","It makes the bridge heavier and stronger.","It stops cars from crossing.","It replaces the need for inspections."],e:"Monitoring is one way engineers assess and maintain structural safety."},
+{id:"t12",r:"titan",c:"D2.2",d:2,q:"Why are race cars built very low to the ground?",o:["A low centre of gravity makes them less likely to tip in fast turns.","Being low makes them heavier.","Low cars use more fuel.","It raises their centre of gravity."],e:"The lower the centre of gravity and the wider the base, the more stable the object."},
+{id:"t13",r:"titan",c:"D1.1",d:2,q:"A town plans a new community centre. Which factor is environmental?",o:["Choosing a site that does not destroy wetland habitat","Making sure the cost fits the budget","Adding ramps so everyone can enter","Picking a location near the bus line"],e:"Cost is economic; ramps and transit access are social. Protecting habitat is environmental."},
+// ===== EMBER CAVERNS: heat in the environment =====
+{id:"h01",r:"ember",c:"E2.1",d:1,q:"When ice melts, what happens to its particles?",o:["They gain energy and can move past each other more freely.","They lose energy and stop moving.","They get bigger.","They turn into a different substance."],e:"Heat speeds up the particles until they break out of fixed positions."},
+{id:"h02",r:"ember",c:"E2.1",d:3,q:"Which holds more total heat energy: a full bathtub of warm water or a cup of boiling water?",o:["The bathtub, because it has far more particles, even though its temperature is lower.","The cup, because it is hotter.","They hold the same amount.","Neither holds heat energy."],e:"Temperature measures average particle motion. Total heat energy also depends on how many particles there are."},
+{id:"h03",r:"ember",c:"E2.2",d:1,q:"Rubbing your hands together warms them. Where does the heat come from?",o:["Friction","Radiation from the Sun","A chemical reaction","Conduction from the air"],e:"Friction changes motion energy into heat."},
+{id:"h04",r:"ember",c:"E2.4",d:1,q:"Which material makes the best pot handle to keep hands safe?",o:["Wood","Copper","Aluminium","Steel"],e:"Wood is a poor conductor (an insulator). Metals conduct heat quickly."},
+{id:"h05",r:"ember",c:"E2.5",d:2,q:"On a sunny afternoon, a breeze blows from the lake onto the land. Why?",o:["Land heats faster, warm air over it rises, and cooler air from the lake moves in.","Water heats faster than land.","Cold air rises above the lake.","Heat moves only from land to water."],e:"Uneven heating creates a convection current in the air."},
+{id:"h06",r:"ember",c:"E2.6",d:1,q:"How does heat from the Sun reach Earth?",o:["By radiation, because space has almost no particles to conduct or convect heat","By conduction through space","By convection currents in space","By wind from the Sun"],e:"Radiation can travel through empty space."},
+{id:"h07",r:"ember",c:"E2.6, E2.7",d:2,q:"Why does melting Arctic sea ice speed up warming?",o:["Dark ocean water absorbs more of the Sun's radiation than white ice, which reflects most of it.","Melting ice releases heat into the air.","Ice blocks greenhouse gases.","Open water reflects more sunlight than ice."],e:"Less reflective surface means more absorbed energy, which melts more ice: a feedback loop."},
+{id:"h08",r:"ember",c:"E2.8",d:1,q:"Which activities are major sources of greenhouse gases?",o:["Burning gasoline in cars and natural gas to heat buildings","Planting trees","Using solar panels","Riding a bike"],e:"Burning fossil fuels releases carbon dioxide."},
+{id:"h09",r:"ember",c:"E1.1, E2.4",d:2,q:"Why do double-pane windows reduce heat loss?",o:["The layer of gas between the panes is a poor conductor of heat.","Two panes reflect all the heat back inside.","The glass gets thicker in the cold.","They let in more cold air."],e:"Trapped air or gas slows conduction, keeping heat inside in winter."},
+{id:"h10",r:"ember",c:"E2.3",d:1,q:"Why does a balloon shrink when it is put in a freezer?",o:["The gas particles slow down and move closer together.","The particles get smaller.","Air leaks out through the rubber instantly.","Cold particles enter the balloon."],e:"Less heat means slower particles and less space between them."},
+{id:"h11",r:"ember",c:"E2.3",d:1,q:"How does a liquid thermometer work?",o:["The liquid expands as it warms and rises in the narrow tube.","The glass shrinks when it is warm.","The liquid evaporates when warm.","Heat pushes the liquid down."],e:"Thermal expansion of the liquid is shown on the scale."},
+{id:"h12",r:"ember",c:"E1.2",d:1,q:"Which energy source is non-renewable?",o:["Natural gas","Wind","Solar","Tidal"],e:"Natural gas is a fossil fuel that takes millions of years to form."},
+{id:"h13",r:"ember",c:"E1.1, E1.2",d:2,q:"How does an air-source heat pump warm a home in winter?",o:["It uses electricity to move heat from the outdoor air into the house instead of burning fuel.","It burns natural gas more slowly.","It creates heat from nothing.","It blows cold air out so the house feels warmer."],e:"Even cold air holds some heat energy. Heat pumps move it indoors, which can cut emissions."},
+];
+
+</script>
+<script>
+"use strict";
+// ------------------------------------------------------------ constants
+const EXAM = "2026-12-07";
+const REALMS = [
+  { id: "coin",   name: "The Coinforge",        sub: "Number and money",              col: "#e4b14d", cases: 5, sec: "M" },
+  { id: "clock",  name: "Clockwork Catacombs",  sub: "Coding",                        col: "#f08c4a", cases: 7, sec: "C", focus: true },
+  { id: "wilds",  name: "Verdant Wilds",        sub: "Ecosystems",                    col: "#7fcf6b", cases: 2, sec: "S" },
+  { id: "spire",  name: "Riddle Spire",         sub: "Patterns and algebra",          col: "#b59cf0", cases: 3, sec: "M" },
+  { id: "ember",  name: "Ember Caverns",        sub: "Heat in the environment",       col: "#ef6a48", cases: 2, sec: "S" },
+  { id: "glass",  name: "Glass Labyrinth",      sub: "Geometry and measurement",      col: "#6cc6e8", cases: 4, sec: "M" },
+  { id: "alch",   name: "Alchemist's Vault",    sub: "Pure substances and mixtures",  col: "#4fc4a5", cases: 2, sec: "S" },
+  { id: "oracle", name: "Oracle's Market",      sub: "Data and probability",          col: "#f2c6a0", cases: 2, sec: "M" },
+  { id: "titan",  name: "Titan's Bridge",       sub: "Structures and mechanisms",     col: "#c7b38a", cases: 2, sec: "S" },
+];
+const RMAP = Object.fromEntries(REALMS.map(r => [r.id, r]));
+const SECNAME = { M: "Math", S: "Science", C: "Coding" };
+const CASE_N = 5, BOSS_N = 7; // hits needed to win a case / a Guardian
+
+const ALLIES = [
+  { id: "pip",      name: "Pip",      title: "Lantern Moth",      rar: "Common",    col: "#f2d67a", perk: "+10% XP on everything" },
+  { id: "bramble",  name: "Bramble",  title: "Hedge-Knight",      rar: "Common",    col: "#9fcf7a", perk: "Combo Shield: your first wrong answer in a run keeps your combo" },
+  { id: "nib",      name: "Nib",      title: "Gearling Tinkerer", rar: "Rare",      col: "#f08c4a", perk: "+30% XP in the Clockwork Catacombs" },
+  { id: "sable",    name: "Sable",    title: "Fox Cartographer",  rar: "Rare",      col: "#6cc6e8", perk: "+30% XP in Glass Labyrinth and Riddle Spire" },
+  { id: "tamsin",   name: "Tamsin",   title: "Oracle Toad",       rar: "Rare",      col: "#b59cf0", perk: "One free 50/50 in every case" },
+  { id: "cinder",   name: "Cinder",   title: "Ember Wyrmling",    rar: "Epic",      col: "#ef6a48", perk: "Lantern Rush lasts 30 s longer" },
+  { id: "ironbark", name: "Ironbark", title: "Old Treant",        rar: "Epic",      col: "#7fcf6b", perk: "+25% gold, and a free Ember Ward every 7-day streak" },
+  { id: "nyx",      name: "Nyx",      title: "Star Owl",          rar: "Legendary", col: "#e4b14d", perk: "+20% XP and +50% gold. Earned only by naming the thief." },
+];
+const AMAP = Object.fromEntries(ALLIES.map(a => [a.id, a]));
+const UNLOCK = 10, LVL_STEP = 15;
+
+const SUSPECTS = [
+  { id: "quill", name: "Archivist Quill", note: "Keeper of the old books. Taught at the Academy for fifty years. Shuffles about in soft slippers." },
+  { id: "mira",  name: "Mira Vale",       note: "Your rival apprentice. Brilliant at codes. Says she was ill that night." },
+  { id: "warden",name: "The Brass Warden",note: "A clockwork guardian, sixty years old and half a tonne of brass. Knows every lock." },
+  { id: "ferro", name: "Captain Ferro",   note: "Captain of the Great Gate. Joined the Academy five years ago." },
+];
+const CULPRIT = "quill";
+const INTRO = "On the night of the Lantern Festival, the nine Seals of Cipherkeep Academy vanished from the Deep Vault. Without them the Academy's wards will fail on the night of the Grand Trial, December 7. The thief left riddles in every wing. Solve them, recover the Seals, and name the thief.";
+const CLUES = {
+  coin:   "The Vault door was opened by its number lock, not forced. The thief knew the combination, or could work it out.",
+  spire:  "The riddle notes are written in the Old Cipher, a code last taught at the Academy forty years ago.",
+  glass:  "Captain Ferro guarded the Great Gate all night. Three apprentices played cards with him until dawn.",
+  oracle: "The ink on the notes is ordinary oak-gall ink, sold at every stall in the Oracle's Market.",
+  wilds:  "Fresh soil from the Verdant Wilds lay on the vault steps: the kind that clings to soft slippers, not boots.",
+  alch:   "The Brass Warden weighs half a tonne. The thief crossed the fragile old library floor, yet not one tile is cracked.",
+  titan:  "The healer's log: Mira Vale spent the whole Festival night in the infirmary with a fever, asleep by nine.",
+  ember:  "Half-burned in the archive fireplace, a journal page: 'The apprentices have grown comfortable. Only a true mystery will wake them.'",
+  clock:  "In the empty Seal cases deep in the Catacombs: one golden feather, the kind that falls from the Archivist's owl-down cloak.",
+};
+const ENDING = "Archivist Quill sets down his tea and smiles. 'Well reasoned, Apprentice. I hid the Seals myself, to see who would rise to a real mystery. You did.' He hands you a star-silver feather, and a small owl blinks awake on your shoulder. 'One trial remains, on December 7. You are ready for it.'";
+
+const QUESTS = [
+  { id: "code",  text: "Answer 5 coding questions correctly", goal: 5, always: true },
+  { id: "cases", text: "Win 2 battles",                       goal: 2 },
+  { id: "combo", text: "Reach a 5-answer combo",              goal: 5 },
+  { id: "rush",  text: "Play a Lantern Rush",                 goal: 1 },
+  { id: "review",text: "Solve 3 Unsolved Cases",              goal: 3 },
+  { id: "sci",   text: "Answer 4 science questions correctly",goal: 4 },
+  { id: "three", text: "Win a battle with all 3 hearts",            goal: 1 },
+  { id: "math",  text: "Answer 5 math questions correctly",   goal: 5 },
+];
+const ROAD = [
+  { at: 60,   kind: "chest" }, { at: 150,  kind: "gold", n: 100 }, { at: 280,  kind: "ward" },
+  { at: 450,  kind: "chest" }, { at: 650,  kind: "hints", n: 3 },   { at: 900,  kind: "chest" },
+  { at: 1200, kind: "gold", n: 250 }, { at: 1550, kind: "ward" },  { at: 1950, kind: "chest" },
+  { at: 2400, kind: "title", t: "Lantern-Bearer" }, { at: 3000, kind: "chest" }, { at: 3800, kind: "title", t: "Keeper of Seals" },
+];
+const TITLES = [[1, "Novice"], [3, "Apprentice"], [5, "Sleuth"], [8, "Cipher Adept"], [12, "Runesmith"], [16, "Grand Archivist"]];
+const QR = { 1: 900, 2: 1150, 3: 1400 };
+
+// ------------------------------------------------------------ icons
+const I = {
+  flame: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c1 4 5 5.5 5 11a5 5 0 0 1-10 0c0-2.4 1.2-3.9 2.3-5 .2 1.6.9 2.6 2 3.1C10.7 8 11.4 5 12 2z"/></svg>',
+  gold: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#e4b14d"/><circle cx="12" cy="12" r="5.5" fill="none" stroke="#9c7426" stroke-width="2"/></svg>',
+  ward: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z"/><path d="M12 8c.7 2 2.5 2.6 2.5 5a2.5 2.5 0 0 1-5 0c0-1 .5-1.7 1-2.2"/></svg>',
+  star: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.5L12 17.3l-5.9 3.2 1.3-6.5-4.9-4.6 6.6-.8z"/></svg>',
+  map: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></svg>',
+  scroll: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 4h11a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H8"/><path d="M6 4a2 2 0 0 0-2 2v2h4V6a2 2 0 0 0-2-2zM8 8v10a2 2 0 1 1-4 0"/><path d="M11 9h5M11 13h5"/></svg>',
+  bolt: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg>',
+  paw: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="10" r="2.2"/><circle cx="10" cy="6" r="2.2"/><circle cx="14" cy="6" r="2.2"/><circle cx="18" cy="10" r="2.2"/><path d="M12 11c3 0 6 4 6 6.5S15.5 20 12 19s-6 1-6-1.5S9 11 12 11z"/></svg>',
+  book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg>',
+  user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>',
+  close: '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+  key: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="8" cy="12" r="4"/><path d="M12 12h9M18 12v3M21 12v2"/></svg>',
+  crown: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/></svg>',
+  seal: '<svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="9" fill="#7c2a1d"/><circle cx="12" cy="12" r="6" fill="none" stroke="#e4b14d" stroke-width="1.5"/><path d="M12 8l1.3 2.7 3 .4-2.2 2 .6 2.9L12 14.6 9.3 16l.6-2.9-2.2-2 3-.4z" fill="#e4b14d"/></svg>',
+  hint: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/></svg>',
+};
+const REALM_ICON = {
+  coin:  '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="16" cy="9" rx="10" ry="4"/><path d="M6 9v6c0 2.2 4.5 4 10 4s10-1.8 10-4V9M6 15v6c0 2.2 4.5 4 10 4s10-1.8 10-4v-6"/></svg>',
+  clock: '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4l2 3 3.5-.8.6 3.6 3.4 1.2-1.3 3.4 2.3 2.6-2.9 2.2.6 3.6-3.6.3-1.4 3.3-3.2-1.7L13 27l-1.3-3.4-3.6-.4.7-3.6-2.8-2.3 2.4-2.6-1.2-3.4 3.4-1.1.7-3.6 3.5.9z"/><circle cx="16" cy="16" r="4.5"/></svg>',
+  wilds: '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M16 28V14M16 14c-7 0-10-5-10-10 7 0 10 4 10 10zM16 18c5 0 9-3 9-8-6 0-9 3-9 8z"/></svg>',
+  spire: '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M16 3l5 9h-3v6h3v10H11V18h3v-6h-3z"/><path d="M14 23h4"/></svg>',
+  ember: '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M16 4c2 5 8 7 8 14a8 8 0 0 1-16 0c0-3.5 2-6 3.6-7.6.3 2.6 1.4 4 3.4 4.8C14 11 15 7.5 16 4z"/></svg>',
+  glass: '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M16 3l11 6.5v13L16 29 5 22.5v-13z"/><path d="M5 9.5l11 6.5 11-6.5M16 16v13"/></svg>',
+  alch:  '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 4h8M13 4v8L6 25a2 2 0 0 0 1.8 3h16.4a2 2 0 0 0 1.8-3l-7-13V4"/><path d="M9 20h14"/></svg>',
+  oracle:'<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2"><circle cx="16" cy="14" r="9"/><path d="M10 27h12M12 23l-1 4M20 23l1 4"/><path d="M12 13a4 4 0 0 1 4-4"/></svg>',
+  titan: '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 22h26M5 22V12M27 22V12M3 12c6 0 7-6 13-6s7 6 13 6"/><path d="M10 22v-7M16 22V9M22 22v-7"/></svg>',
+};
+function allyArt(id) {
+  const c = AMAP[id].col;
+  const eye = (x, y, r = 2.6) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#10161a"/><circle cx="${x + .9}" cy="${y - .9}" r="${r / 3}" fill="#fff"/>`;
+  const art = {
+    pip: `<ellipse cx="17" cy="30" rx="13" ry="16" fill="${c}" opacity=".75" transform="rotate(-20 17 30)"/><ellipse cx="47" cy="30" rx="13" ry="16" fill="${c}" opacity=".75" transform="rotate(20 47 30)"/><ellipse cx="32" cy="34" rx="7" ry="16" fill="#7a5f2b"/><circle cx="32" cy="20" r="8" fill="#7a5f2b"/>${eye(29, 19, 2)}${eye(35, 19, 2)}<path d="M28 13q-4-7-8-6M36 13q4-7 8-6" stroke="#7a5f2b" stroke-width="2" fill="none"/><circle cx="32" cy="50" r="5" fill="#fff6c7"/>`,
+    bramble: `<path d="M8 44q0-22 24-24q24 2 24 24z" fill="#6b4b2a"/>${[...Array(9)].map((_, i) => { const a = Math.PI * (1.05 + i * .11), x = 32 + 26 * Math.cos(a), y = 44 + 24 * Math.sin(a); return `<path d="M${32 + 18 * Math.cos(a)} ${44 + 17 * Math.sin(a)}L${x} ${y}" stroke="#4a3219" stroke-width="4" stroke-linecap="round"/>`; }).join("")}<ellipse cx="40" cy="40" rx="12" ry="9" fill="#e9cfa3"/>${eye(42, 37, 2.2)}<circle cx="52" cy="41" r="2.4" fill="#10161a"/><rect x="14" y="38" width="16" height="12" rx="3" fill="${c}"/>`,
+    nib: `<circle cx="32" cy="34" r="17" fill="#8a5a2e"/><circle cx="32" cy="34" r="17" fill="none" stroke="${c}" stroke-width="5" stroke-dasharray="5 4"/><rect x="21" y="27" width="22" height="12" rx="6" fill="#10161a"/><circle cx="27" cy="33" r="3" fill="${c}"/><circle cx="37" cy="33" r="3" fill="${c}"/><path d="M32 17V9" stroke="${c}" stroke-width="2.5"/><circle cx="32" cy="8" r="3" fill="${c}"/>`,
+    sable: `<path d="M14 18l8 12h20l8-12-6 20q-12 16-24 0z" fill="${c}" opacity=".35"/><path d="M12 14l10 14h20l10-14-4 22q-14 18-32 0z" fill="#d8743a"/><path d="M24 44q8 8 16 0l-8 10z" fill="#f4e4cf"/>${eye(25, 34)}${eye(39, 34)}<circle cx="32" cy="47" r="2.6" fill="#10161a"/>`,
+    tamsin: `<ellipse cx="32" cy="40" rx="22" ry="15" fill="#6f8f4a"/><circle cx="21" cy="26" r="7" fill="#6f8f4a"/><circle cx="43" cy="26" r="7" fill="#6f8f4a"/>${eye(21, 26, 3.5)}${eye(43, 26, 3.5)}<path d="M20 42q12 7 24 0" stroke="#2b3a1c" stroke-width="2.5" fill="none"/><circle cx="32" cy="12" r="6" fill="${c}" opacity=".85"/>`,
+    cinder: `<path d="M18 50q-8-14 4-24q6-6 4-14q12 6 12 18q6-4 6-10q10 12 2 26q-8 10-28 4z" fill="${c}"/><path d="M26 50q-4-8 4-14q6 4 6 10q4-2 4-6q4 6 0 12z" fill="#ffd27a"/>${eye(27, 32, 2.4)}${eye(37, 32, 2.4)}`,
+    ironbark: `<rect x="26" y="34" width="12" height="22" rx="3" fill="#6b4b2a"/><circle cx="32" cy="24" r="16" fill="${c}"/><circle cx="20" cy="30" r="9" fill="${c}"/><circle cx="44" cy="30" r="9" fill="${c}"/>${eye(27, 42, 2)}${eye(37, 42, 2)}<path d="M28 50q4 3 8 0" stroke="#10161a" stroke-width="2" fill="none"/>`,
+    nyx: `<path d="M12 22l8 6M52 22l-8 6" stroke="#3b3f6b" stroke-width="5" stroke-linecap="round"/><ellipse cx="32" cy="36" rx="18" ry="20" fill="#2c3160"/><circle cx="24" cy="30" r="8" fill="${c}"/><circle cx="40" cy="30" r="8" fill="${c}"/>${eye(24, 30, 4)}${eye(40, 30, 4)}<path d="M29 38l3 5 3-5z" fill="${c}"/><circle cx="20" cy="48" r="1.4" fill="#fff"/><circle cx="44" cy="46" r="1.2" fill="#fff"/><circle cx="32" cy="52" r="1" fill="#fff"/>`,
+  };
+  return `<svg viewBox="0 0 64 64" aria-hidden="true">${art[id]}</svg>`;
+}
+const CHEST_SVG = `<svg class="box" viewBox="0 0 120 120"><rect x="14" y="52" width="92" height="52" rx="6" fill="#6b4422"/><path d="M14 56q0-34 46-34t46 34z" fill="#875630"/><rect x="14" y="50" width="92" height="10" fill="#e4b14d"/><rect x="54" y="50" width="12" height="54" fill="#e4b14d"/><rect x="51" y="58" width="18" height="18" rx="3" fill="#2a1d0e"/><circle cx="60" cy="66" r="3" fill="#e4b14d"/></svg>`;
+
+// ------------------------------------------------------------ utilities
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const today = () => new Date().toLocaleDateString("en-CA");
+const addDays = (d, n) => { const t = new Date(d + "T12:00:00"); t.setDate(t.getDate() + n); return t.toLocaleDateString("en-CA"); };
+const diffDays = (a, b) => Math.round((new Date(b + "T12:00:00") - new Date(a + "T12:00:00")) / 864e5);
+const rnd = n => Math.floor(Math.random() * n);
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+function hash(s) { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+function numval(s) {
+  let t = String(s).replace(/<[^>]+>/g, "").replace(/[$\s]/g, "").replace(/−/g, "-").replace(/(mL|L|kJ|kg|g|m²|cm²|cm³|cm|m|s|°C|°|%)$/, "");
+  const mixed = String(s).replace(/−/g, "-").replace(/[$]/g, "").trim().match(/^(-?)(\d+) (\d+)\/(\d+)(\s*\S*)$/);
+  if (mixed) return (mixed[1] ? -1 : 1) * (+mixed[2] + mixed[3] / mixed[4]);
+  if (/^-?\d+\/\d+$/.test(t)) { const [a, b] = t.split("/"); return a / b; }
+  if (/^-?\d+(\.\d+)?$/.test(t)) return parseFloat(t);
+  return null;
+}
+function hl(code) {
+  const kw = /\b(SET|TO|DISPLAY|INPUT|REPEAT|TIMES|UNTIL|FOR|FROM|EACH|IN|END|IF|THEN|ELSE|DEFINE|RETURN|WHEN|MOD|AND|OR|NOT|MOVE|TURN|RIGHT|LEFT|DEGREES|RANDOM|ON|OFF)\b/g;
+  return esc(code).split("\n").map(line => line
+    .replace(/(&quot;[^&]*&quot;)/g, '<span class="st">$1</span>')
+    .replace(kw, '<span class="kw">$1</span>')
+    .replace(/(^|[^\w#">])(−?\d+(\.\d+)?)/g, '$1<span class="nu">$2</span>')).join("\n");
+}
+
+// ------------------------------------------------------------ state
+let S = null;
+const ui = { view: "map", realm: null, session: null, dbStatus: "local" };
+function freshState(name, starter) {
+  const allies = {};
+  ALLIES.forEach(a => allies[a.id] = { shards: 0 });
+  allies[starter].shards = UNLOCK;
+  return {
+    v: 1, name, created: Date.now(), updated: Date.now(),
+    xp: 0, gold: 60, renown: 0, rating: 1000, ratingHist: [1000], hints: 3, wards: 1,
+    days: [], wardDays: [], daily: {}, goal: 100,
+    allies, equipped: starter, chests: 0, bigChests: 0,
+    realms: Object.fromEntries(REALMS.map(r => [r.id, { stars: Array(r.cases).fill(0), boss: false }])),
+    q: {}, quests: null, rushBest: 0, trials: [], marks: {}, accused: { tries: 0, solved: false },
+    road: 0, titles: [], seen: { intro: false }, lastWardCheck: today(),
+  };
+}
+const LS_KEY = "cipherkeep.save.v1";
+function localLoad() { try { const t = localStorage.getItem(LS_KEY); return t ? JSON.parse(t) : null; } catch (e) { return null; } }
+function localSave() { try { localStorage.setItem(LS_KEY, JSON.stringify(S)); } catch (e) { } }
+
+// --- optional cloud sync hook (unused in the standalone app)
+const cloud = { db: null, ref: null, busy: false, again: false, timer: null };
+async function cloudInit() {
+  try {
+    if (!window.claude || !window.claude.use) return;
+    const [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
+    if (!db || !user) return;
+    const id = await user.id();
+    if (!id) return;
+    cloud.db = db;
+    cloud.ref = db.collection("data/users/" + id).doc("save");
+    await cloudPull();
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") cloudPull(); });
+  } catch (e) { ui.dbStatus = "local"; renderTop(); }
+}
+async function cloudPull() {
+  if (!cloud.ref || ui.session) return;
+  try {
+    const hadGame = !!S;
+    const snap = await Promise.race([cloud.ref.get(), new Promise((_, r) => setTimeout(() => r(new Error("timeout")), 10000))]);
+    const data = snap && typeof snap.data === "function" ? snap.data() : snap;
+    ui.dbStatus = "cloud";
+    if (ui.session) return;
+    cloud.resetAt = Math.max(cloud.resetAt || 0, (data && data.resetAt) || 0);
+    // A game started before the last reset is gone on every device.
+    if (S && S.created < cloud.resetAt) { S = null; try { localStorage.removeItem(LS_KEY); } catch (e) { } }
+    let remote = null;
+    if (data && data.save) { try { remote = JSON.parse(data.save); } catch (e) { remote = null; } if (remote && remote.created < cloud.resetAt) remote = null; }
+    if (remote) {
+      const ru = remote.updated;
+      if (!S) S = remote; else if (ru !== S.updated) S = merge(S, remote);
+      migrate(S); localSave();
+      if (S.updated !== ru) cloudPush();
+    } else if (S) cloudPush();
+    if (S) route(); else if (hadGame) { ui.view = "map"; renderTop(); renderTabs(); welcome(); }
+    renderTop();
+  } catch (e) { ui.dbStatus = "local"; renderTop(); }
+}
+function merge(a, b) {
+  const base = JSON.parse(JSON.stringify(a.updated >= b.updated ? a : b));
+  const other = a.updated >= b.updated ? b : a;
+  base.days = [...new Set([...(a.days || []), ...(b.days || [])])].sort();
+  base.wardDays = [...new Set([...(a.wardDays || []), ...(b.wardDays || [])])].sort();
+  for (const [id, r] of Object.entries(other.q || {})) { const m = base.q[id]; if (!m || r.n > m.n) base.q[id] = r; }
+  for (const [d, r] of Object.entries(other.daily || {})) { const m = base.daily[d]; if (!m || r.ans > m.ans) base.daily[d] = r; }
+  for (const id of Object.keys(base.realms)) {
+    const x = base.realms[id], y = other.realms && other.realms[id];
+    if (y) { x.stars = x.stars.map((s, i) => Math.max(s, y.stars[i] || 0)); x.boss = x.boss || y.boss; }
+  }
+  base.rushBest = Math.max(a.rushBest || 0, b.rushBest || 0);
+  base.xp = Math.max(a.xp, b.xp); base.renown = Math.max(a.renown, b.renown);
+  base.updated = Date.now();
+  return base;
+}
+function cloudPush() {
+  if (!cloud.ref) return;
+  clearTimeout(cloud.timer);
+  cloud.timer = setTimeout(async () => {
+    if (!S) return;
+    if (cloud.busy) { cloud.again = true; return; }
+    cloud.busy = true;
+    try { await cloud.ref.set({ save: JSON.stringify(S), updated: S.updated, resetAt: cloud.resetAt || 0 }); ui.dbStatus = "cloud"; }
+    catch (e) { ui.dbStatus = "local"; }
+    cloud.busy = false; renderTop();
+    if (cloud.again) { cloud.again = false; cloudPush(); }
+  }, 1200);
+}
+function save() { S.updated = Date.now(); localSave(); cloudPush(); }
+
+// ------------------------------------------------------------ derived values
+const level = xp => Math.floor(Math.sqrt(xp / 40)) + 1;
+const levelXP = l => 40 * (l - 1) * (l - 1);
+const title = () => { const l = level(S.xp); let t = TITLES[0][1]; TITLES.forEach(([n, s]) => { if (l >= n) t = s; }); return t; };
+const owned = id => S.allies[id].shards >= UNLOCK;
+const allyLvl = id => owned(id) ? Math.min(4, 1 + Math.floor((S.allies[id].shards - UNLOCK) / LVL_STEP)) : 0;
+const eq = id => S.equipped === id && owned(id);
+const seals = () => REALMS.filter(r => S.realms[r.id].boss).map(r => r.id);
+function day() { const d = today(); if (!S.daily[d]) S.daily[d] = { xp: 0, ans: 0, cor: 0 }; return S.daily[d]; }
+function streakInfo() {
+  const set = new Set([...S.days, ...S.wardDays]);
+  let d = today(), n = 0;
+  if (!set.has(d)) d = addDays(d, -1);
+  while (set.has(d)) { n++; d = addDays(d, -1); }
+  return { n, todayDone: S.days.includes(today()) };
+}
+function applyWards() {
+  // Cover missed days with Ember Wards, oldest first, only if the streak is still alive.
+  if (!S.days.length) return;
+  const last = [...S.days, ...S.wardDays].sort().pop();
+  const gap = diffDays(last, today()) - 1;
+  if (gap <= 0) return;
+  if (gap <= S.wards) {
+    for (let i = 1; i <= gap; i++) S.wardDays.push(addDays(last, i));
+    S.wards -= gap; toast(`An Ember Ward kept your streak alive (${gap} day${gap > 1 ? "s" : ""}).`); save();
+  }
+}
+function markActive() {
+  const d = today();
+  if (!S.days.includes(d)) {
+    S.days.push(d);
+    const st = streakInfo().n;
+    if (eq("ironbark") && st > 0 && st % 7 === 0) { S.wards++; toast("Ironbark grew you a free Ember Ward."); }
+  }
+}
+function ensureQuests() {
+  const d = today();
+  if (S.quests && S.quests.day === d) return;
+  const pool = QUESTS.filter(q => !q.always);
+  const h = hash(d + S.name);
+  const pick = [QUESTS[0]];
+  const p = shuffleSeeded(pool, h).slice(0, 2);
+  S.quests = { day: d, list: pick.concat(p).map(q => ({ id: q.id, prog: 0, claimed: false })), bonus: false };
+}
+function shuffleSeeded(a, seed) { a = a.slice(); let s = seed || 1; for (let i = a.length - 1; i > 0; i--) { s = (s * 1103515245 + 12345) >>> 0; const j = s % (i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function quest(id, amt = 1, absolute = false) {
+  ensureQuests();
+  S.quests.list.forEach(q => { if (q.id === id) { const g = QUESTS.find(x => x.id === id).goal; q.prog = Math.min(g, absolute ? Math.max(q.prog, amt) : q.prog + amt); } });
+}
+function questsReady() { if (!S) return 0; ensureQuests(); return S.quests.list.filter(q => !q.claimed && q.prog >= QUESTS.find(x => x.id === q.id).goal).length; }
+function dueReviews() {
+  const d = today();
+  return Object.entries(S.q).filter(([, r]) => r.box !== undefined && r.box < 4 && r.due <= d).map(([id]) => id).filter(id => BANK.some(q => q.id === id));
+}
+
+// ------------------------------------------------------------ question selection
+function pickQuestions(pool, n) {
+  const d = today();
+  const target = S.rating;
+  const scored = pool.map(q => {
+    const r = S.q[q.id];
+    let s = Math.random() * 30;
+    if (!r) s += 200;
+    else { s += (r.box !== undefined && r.box < 4 && r.due <= d) ? 120 : 0; s += (1 - r.c / Math.max(1, r.n)) * 60; s -= r.n * 15; }
+    s -= Math.abs(QR[q.d] - target) / 12;
+    return { q, s };
+  }).sort((a, b) => b.s - a.s);
+  return scored.slice(0, n).map(x => x.q).sort((a, b) => a.d - b.d);
+}
+function prepare(q) {
+  const vals = q.o.map(numval);
+  let opts;
+  if (vals.every(v => v !== null)) opts = q.o.map((o, i) => ({ o, v: vals[i] })).sort((a, b) => a.v - b.v).map(x => x.o);
+  else opts = shuffle(q.o);
+  return { q, opts, ans: opts.indexOf(q.o[0]) };
+}
+
+// ------------------------------------------------------------ rewards
+function xpMult(realm) {
+  let m = 1;
+  if (eq("pip")) m += .10 + .05 * (allyLvl("pip") - 1);
+  if (eq("nib") && realm === "clock") m += .30 + .05 * (allyLvl("nib") - 1);
+  if (eq("sable") && (realm === "glass" || realm === "spire")) m += .30 + .05 * (allyLvl("sable") - 1);
+  if (eq("nyx")) m += .20;
+  return m;
+}
+function goldMult() { return 1 + (eq("ironbark") ? .25 : 0) + (eq("nyx") ? .5 : 0); }
+function addXP(n, realm) {
+  const before = level(S.xp);
+  const gain = Math.round(n * xpMult(realm));
+  S.xp += gain; day().xp += gain;
+  if (level(S.xp) > before) setTimeout(() => toast(`Level ${level(S.xp)}! You are now: ${title()}`), 600);
+  return gain;
+}
+function addGold(n) { const g = Math.round(n * goldMult()); S.gold += g; return g; }
+function addRenown(n) {
+  S.renown += n;
+  while (S.road < ROAD.length && S.renown >= ROAD[S.road].at) { grantRoad(ROAD[S.road]); S.road++; }
+}
+function grantRoad(m) {
+  if (m.kind === "chest") { S.chests++; toast("Renown reward: a Reliquary chest!"); }
+  if (m.kind === "gold") { S.gold += m.n; toast(`Renown reward: ${m.n} gold`); }
+  if (m.kind === "ward") { S.wards++; toast("Renown reward: an Ember Ward"); }
+  if (m.kind === "hints") { S.hints += m.n; toast(`Renown reward: ${m.n} hint tokens`); }
+  if (m.kind === "title") { S.titles.push(m.t); toast(`New title: ${m.t}`); }
+}
+function rollChest(big) {
+  const loot = { gold: addGold(big ? 120 + rnd(60) : 30 + rnd(40)), shards: [] };
+  const pool = ALLIES.filter(a => a.id !== "nyx");
+  const pickAlly = () => {
+    if (big) { const un = pool.filter(a => !owned(a.id)); if (un.length) return un[rnd(un.length)]; }
+    const t = rnd(100), rar = t < 50 ? "Common" : t < 85 ? "Rare" : "Epic";
+    const opts = pool.filter(a => a.rar === rar);
+    return opts[rnd(opts.length)];
+  };
+  const a = pickAlly();
+  const n = big ? 10 : 4 + rnd(4);
+  const wasOwned = owned(a.id);
+  S.allies[a.id].shards += n;
+  loot.shards.push({ id: a.id, n, unlocked: !wasOwned && owned(a.id) });
+  if (Math.random() < (big ? 1 : .25)) { S.hints++; loot.hint = 1; }
+  if (big && Math.random() < .5) { S.wards++; loot.ward = 1; }
+  return loot;
+}
+
+// ------------------------------------------------------------ v2 helpers: ranks, foes, sound, guide, shop, reset
+const RANKS = [[0, "Bronze", "#c98a5a"], [1100, "Silver", "#c9d3d6"], [1200, "Gold", "#e4b14d"], [1300, "Crystal", "#6cc6e8"], [1400, "Mythic", "#b59cf0"]];
+function rank(r) { let i = 0; RANKS.forEach((k, n) => { if (r >= k[0]) i = n; }); return { idx: i, name: RANKS[i][1], col: RANKS[i][2], next: RANKS[i + 1] ? RANKS[i + 1][0] : null, from: RANKS[i][0] }; }
+const FOES = {
+  coin:   { n: "Coin Mimic",    g: "The Gilded Hoarder",   shape: 1, eyes: 2, taunt: "Count carefully, little sleuth. I never miscount." },
+  clock:  { n: "Gear Gremlin",  g: "The Tick-Tock Colossus", shape: 1, eyes: 1, taunt: "Step by step, line by line. One slip and my gears grind you." },
+  wilds:  { n: "Thorn Sprite",  g: "The Moss King",        shape: 2, eyes: 2, taunt: "Everything in my forest is connected. Are your answers?" },
+  spire:  { n: "Riddle Imp",    g: "The Sphinx of Stairs", shape: 0, eyes: 3, taunt: "Find my unknown, or climb no higher." },
+  ember:  { n: "Cinder Bat",    g: "The Furnace Wyrm",     shape: 2, eyes: 2, taunt: "Heat rises, sleuth. So will your mistakes." },
+  glass:  { n: "Mirror Shade",  g: "The Prism Minotaur",   shape: 0, eyes: 2, taunt: "Turn it, flip it, slide it. Lose your way and you stay." },
+  alch:   { n: "Vault Ooze",    g: "The Bubbling Golem",   shape: 0, eyes: 1, taunt: "Pure or mixed? Guess wrong and I dissolve you." },
+  oracle: { n: "Dice Goblin",   g: "The Blind Oracle",     shape: 1, eyes: 3, taunt: "I already know the odds. Do you?" },
+  titan:  { n: "Rivet Rat",     g: "The Stone Titan",      shape: 2, eyes: 1, taunt: "I have held this bridge for an age. Show me where it breaks." },
+};
+const NOTES = {
+  3: "A note waits on your pillow, written in the Old Cipher: 'Three Seals already? You are quicker than I hoped. Keep going.'",
+  6: "Another note, slipped under your door: 'Six Seals. You hold enough clues to name me now. Do you dare?'",
+};
+const eyeS = (x, y, r) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#fff"/><circle cx="${x}" cy="${y + r * .15}" r="${r * .55}" fill="#10161a"/>`;
+function foeArt(id, boss) {
+  const c = RMAP[id].col, f = FOES[id];
+  const body = [
+    `<path d="M10 52q-4-38 22-40q26 2 22 40q-6 6-11 0q-5 6-11 0q-5 6-11 0q-6 6-11 0z" fill="${c}"/>`,
+    `<rect x="9" y="14" width="46" height="40" rx="11" fill="${c}"/><rect x="15" y="54" width="9" height="6" rx="2" fill="${c}"/><rect x="40" y="54" width="9" height="6" rx="2" fill="${c}"/>`,
+    `<path d="M32 8l8 10 12-2-4 12 10 8-12 6 0 14-14-6-14 6 0-14-12-6 10-8-4-12 12 2z" fill="${c}"/>`,
+  ][f.shape];
+  const eyes = f.eyes === 1 ? eyeS(32, 31, 8) : f.eyes === 3 ? eyeS(21, 32, 4.5) + eyeS(32, 27, 4.5) + eyeS(43, 32, 4.5) : eyeS(24, 31, 6) + eyeS(40, 31, 6);
+  const brow = `<path d="M16 21l11 5M48 21l-11 5" stroke="#10161a" stroke-width="3" stroke-linecap="round"/>`;
+  const mouth = boss ? `<path d="M23 45h18l-3 5h-3l-3-4-3 4h-3z" fill="#10161a"/>` : `<path d="M25 45q7-5 14 0" stroke="#10161a" stroke-width="2.5" fill="none" stroke-linecap="round"/>`;
+  const crown = boss ? `<path d="M19 13l3-11 10 8 10-8 3 11z" fill="#e4b14d" stroke="#9c7426" stroke-width="1"/>` : "";
+  return `<svg viewBox="0 0 64 64" aria-hidden="true">${body}${crown}${eyes}${brow}${mouth}</svg>`;
+}
+const heartsHtml = n => `<span class="hearts" id="hearts" aria-label="${Math.max(0, n)} hearts left">${"♥".repeat(Math.max(0, n))}<span class="lost">${"♥".repeat(3 - Math.max(0, n))}</span></span>`;
+let actx = null;
+function sfx(kind) {
+  if (!S || S.sound === false) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const seq = { ok: [[660, .08], [880, .13]], no: [[190, .2]], win: [[523, .1], [659, .1], [784, .1], [1047, .25]], lose: [[300, .16], [210, .3]], chest: [[784, .08], [988, .08], [1175, .22]], buy: [[880, .06], [1175, .1]] }[kind];
+    let t = actx.currentTime;
+    seq.forEach(([fr, d]) => {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = kind === "no" || kind === "lose" ? "sawtooth" : "triangle"; o.frequency.value = fr;
+      g.gain.setValueAtTime(.1, t); g.gain.exponentialRampToValueAtTime(.001, t + d);
+      o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + d); t += d;
+    });
+  } catch (e) { }
+}
+function confetti() {
+  try {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const c = document.createElement("canvas"); c.style.cssText = "position:fixed;inset:0;z-index:50;pointer-events:none";
+    c.width = innerWidth; c.height = innerHeight; document.body.appendChild(c);
+    const x = c.getContext("2d"), cols = ["#e4b14d", "#4fc4a5", "#ef6a48", "#b59cf0", "#6cc6e8"];
+    const P = [...Array(90)].map(() => ({ x: innerWidth / 2, y: innerHeight * .35, vx: (Math.random() - .5) * 14, vy: -Math.random() * 13 - 3, s: 5 + Math.random() * 5, c: cols[rnd(5)], r: Math.random() * 6 }));
+    const t0 = performance.now();
+    (function f(t) {
+      x.clearRect(0, 0, c.width, c.height);
+      P.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += .45; p.r += .2; x.save(); x.translate(p.x, p.y); x.rotate(p.r); x.fillStyle = p.c; x.fillRect(-p.s / 2, -p.s / 2, p.s, p.s * .6); x.restore(); });
+      if (t - t0 < 1800) requestAnimationFrame(f); else c.remove();
+    })(t0);
+  } catch (e) { }
+}
+function migrate(s) {
+  s.seen = s.seen || {}; s.bigChests = s.bigChests || 0; s.marks = s.marks || {}; s.titles = s.titles || [];
+  if (s.sound === undefined) s.sound = true;
+  if (s.rankBest === undefined) s.rankBest = rank(s.rating).idx;
+  return s;
+}
+function nextUp() {
+  // A Guardian that is ready always comes first. Otherwise alternate coding with the least-finished realm.
+  for (const r of REALMS) { const st = S.realms[r.id]; if (!st.boss && st.stars.every(x => x > 0)) return { realm: r.id, boss: true, idx: r.cases }; }
+  const open = REALMS.filter(r => S.realms[r.id].stars.some(x => x === 0));
+  if (!open.length) return null;
+  const frac = r => S.realms[r.id].stars.filter(x => x > 0).length / r.cases;
+  const clock = open.find(r => r.id === "clock");
+  let pick;
+  if (!S.last) pick = open.find(r => r.id === "coin") || open[0];
+  else if (clock && S.last !== "clock") pick = clock;
+  else pick = open.filter(r => r.id !== S.last).sort((a, b) => frac(a) - frac(b))[0] || open[0];
+  return { realm: pick.id, boss: false, idx: S.realms[pick.id].stars.findIndex(x => x === 0) };
+}
+function guide(first) {
+  const step = (n, t, d) => `<div class="row" style="align-items:flex-start"><span class="stepn">${n}</span><div><b>${t}</b><div class="muted small">${d}</div></div></div>`;
+  modal(`<h2>How Cipherkeep works</h2><div class="stack" style="margin:12px 0">
+    ${step(1, "Fight", "Tap <b>Fight!</b> on the Play screen. Every right answer hits the riddle-wraith. Every wrong answer costs a heart. Beat it before you lose 3 hearts.")}
+    ${step(2, "Win Seals", "Beat every wraith in a realm to face its Guardian. Beat the Guardian to win a Seal and a clue.")}
+    ${step(3, "Solve the mystery", "Read your clues in the Casebook. With 6 Seals you can name the thief.")}
+    ${step(4, "Power up", "Chests give ally shards. Gold buys hints and chests in the Shop. Play every day to grow your streak.")}
+    </div><p class="muted small">Top bar: ${I.flame.replace("<svg", '<svg width="14" height="14" style="vertical-align:-2px"')} streak · gold · Ember Wards · your rank. Tap any of them to see what it does.</p>
+    <button class="btn wide" id="ok">${first ? "Start my first battle" : "Got it"}</button>`, (m, close) => {
+    $("#ok", m).onclick = () => { close(); S.seen.guide = true; save(); if (first) { const nu = nextUp(); startSession({ mode: "case", realm: nu.realm, idx: nu.idx }); } };
+  });
+}
+function claimFree() { if (S.lastFree === today()) return; S.lastFree = today(); S.chests++; save(); openNext(); }
+function vShop(el) {
+  const free = S.lastFree !== today();
+  const items = [
+    { id: "hint", name: "3 Hint tokens", desc: "Each one removes a wrong answer in a battle.", cost: 60 },
+    { id: "chest", name: "Reliquary chest", desc: "Ally shards and gold. Sometimes a hint.", cost: 120 },
+    { id: "ward", name: "Ember Ward", desc: "Saves your streak if you miss a day.", cost: 150 },
+  ];
+  el.innerHTML = `<div class="stack"><h1>Shop</h1>
+    <p class="muted" style="margin:0">You have <b style="color:var(--brass)">${S.gold} gold</b>. Earn more by winning battles and finishing quests.</p>
+    <div class="card shop-item"><div><b>Daily free chest</b><div class="muted small">${free ? "Ready now." : "Claimed. A new one arrives tomorrow."}</div></div><button class="btn verd" id="free" ${free ? "" : "disabled"} style="padding:8px 14px">${free ? "Claim" : "Done"}</button></div>
+    ${items.map(it => `<div class="card shop-item"><div><b>${it.name}</b><div class="muted small">${it.desc}</div></div><button class="btn ${S.gold >= it.cost ? "" : "ghost"}" data-buy="${it.id}" style="padding:8px 14px">${I.gold.replace("<svg", '<svg width="16" height="16"')} ${it.cost}</button></div>`).join("")}
+    <p class="muted small" style="margin:0">You own ${S.hints} hint${S.hints === 1 ? "" : "s"} and ${S.wards} Ember Ward${S.wards === 1 ? "" : "s"}.</p></div>`;
+  $("#free", el).onclick = claimFree;
+  el.querySelectorAll("[data-buy]").forEach(b => b.onclick = () => {
+    const it = items.find(x => x.id === b.dataset.buy);
+    if (S.gold < it.cost) { toast(`You need ${it.cost - S.gold} more gold. Win a battle or finish a quest.`); return; }
+    S.gold -= it.cost; sfx("buy");
+    if (it.id === "hint") S.hints += 3;
+    if (it.id === "ward") S.wards++;
+    if (it.id === "chest") S.chests++;
+    save();
+    if (it.id === "chest") openNext(); else { toast(`Bought: ${it.name}`); route(); }
+  });
+}
+function resetGame() {
+  modal(`<h2>Start a new game?</h2><p>This erases <b>everything</b> on this device: XP, allies, Seals, streak and stats. It cannot be undone.</p>
+    <div class="stack"><button class="btn ghost wide" id="cl">Keep my game</button><button class="btn wide" id="yes" style="background:var(--ember);box-shadow:0 4px 0 #8a321d">Erase and start over</button></div>`, (m, close) => {
+    $("#cl", m).onclick = close;
+    $("#yes", m).onclick = () => {
+      close();
+      const at = Date.now();
+      clearTimeout(cloud.timer); cloud.resetAt = at;
+      try { localStorage.removeItem(LS_KEY); } catch (e) { }
+      S = null; ui.session = null; ui.view = "map";
+      if (cloud.ref) { try { Promise.resolve(cloud.ref.set({ save: "", updated: at, resetAt: at })).catch(() => { }); } catch (e) { } }
+      renderTop(); renderTabs(); welcome(); window.scrollTo(0, 0);
+    };
+  });
+}
+
+// ------------------------------------------------------------ chrome
+function renderTop() {
+  if (!S) { $("#topbar").innerHTML = ""; return; }
+  const st = streakInfo(), rk = rank(S.rating);
+  $("#topbar").innerHTML = `
+    <button class="chip" data-tip="Streak: ${st.n} day${st.n === 1 ? "" : "s"}. Finish any battle each day to keep it growing." style="color:${st.todayDone ? "var(--brass)" : "var(--dim)"}">${I.flame}${st.n}</button>
+    <button class="chip" data-tip="Gold: spend it in the Shop on hints, wards and chests.">${I.gold}${S.gold}</button>
+    <button class="chip" data-tip="Ember Wards: each one saves your streak if you miss a day." style="color:#d59b46">${I.ward}${S.wards}</button>
+    <button class="chip" data-tip="Rank: ${rk.name} League, rating ${Math.round(S.rating)}. Right answers on hard riddles raise it fastest." style="color:${rk.col}">${I.crown}<span>${rk.name}</span></button>`;
+  $("#topbar").querySelectorAll("[data-tip]").forEach(b => b.onclick = () => toast(b.dataset.tip));
+}
+function renderTabs() {
+  const swords = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l10 10M4 4v4M4 4h4M20 4L10 14M20 4v4M20 4h-4M5 19l4-4M7 13l4 4M19 19l-4-4M17 13l-4 4"/></svg>';
+  const bag = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>';
+  const tabs = [["map", "Play", swords], ["quests", "Quests", I.scroll], ["shop", "Shop", bag], ["allies", "Allies", I.paw], ["casebook", "Casebook", I.book]];
+  const dots = { quests: S && questsReady() > 0, shop: S && S.lastFree !== today() };
+  $("#tabs").style.display = ui.session || !S ? "none" : "grid";
+  $("#tabs").innerHTML = tabs.map(([id, label, ic]) => `<button data-tab="${id}" class="${ui.view === id || (id === "map" && ["realm", "rush", "profile"].includes(ui.view)) ? "on" : ""}" aria-label="${label}">${ic}${dots[id] ? '<i class="dot"></i>' : ""}<span>${label}</span></button>`).join("");
+  $("#tabs").querySelectorAll("button").forEach(b => b.onclick = () => go(b.dataset.tab));
+}
+function go(view, realm) {
+  ui.view = view; ui.realm = realm || null;
+  const h = view === "realm" ? "map" : view;
+  if (location.hash.slice(1) !== h) { try { history.replaceState(null, "", "#" + h); } catch (e) { } }
+  route(); window.scrollTo(0, 0);
+}
+function route() {
+  if (!S) return;
+  if (ui.session) { renderTop(); renderTabs(); return; }
+  renderTop(); renderTabs();
+  const v = { map: vMap, realm: vRealm, quests: vQuests, rush: vRush, allies: vAllies, shop: vShop, casebook: vCasebook, profile: vProfile }[ui.view] || vMap;
+  $("#view").innerHTML = ""; v($("#view"));
+}
+function toast(msg) {
+  let box = $("#toasts");
+  if (!box) { box = document.createElement("div"); box.id = "toasts"; document.body.appendChild(box); }
+  const t = document.createElement("div"); t.className = "toast"; t.textContent = msg;
+  box.appendChild(t); setTimeout(() => t.remove(), 3000);
+  while (box.children.length > 3) box.firstChild.remove();
+}
+function modal(html, onMount) {
+  const l = $("#layer"); l.innerHTML = `<div class="scrim"><div class="modal" role="dialog" aria-modal="true">${html}</div></div>`;
+  const close = () => { l.innerHTML = ""; };
+  if (onMount) onMount(l.querySelector(".modal"), close);
+  return close;
+}
+function floater(text, el) {
+  const r = el ? el.getBoundingClientRect() : { left: innerWidth / 2, top: innerHeight / 2, width: 0 };
+  const f = document.createElement("div"); f.className = "floater"; f.textContent = text;
+  f.style.left = (r.left + r.width / 2 - 20) + "px"; f.style.top = (r.top - 10) + "px";
+  document.body.appendChild(f); setTimeout(() => f.remove(), 1000);
+}
+
+// ------------------------------------------------------------ views
+function vMap(el) {
+  const days = Math.max(0, diffDays(today(), EXAM));
+  const dx = day().xp, pct = Math.min(100, Math.round(dx / S.goal * 100));
+  const due = dueReviews().length;
+  const l = level(S.xp), nxt = levelXP(l + 1), cur = levelXP(l);
+  const nu = nextUp(), free = S.lastFree !== today(), nCh = S.chests + (S.bigChests || 0) + (free ? 1 : 0);
+  ensureQuests();
+  let hero;
+  if (nu) {
+    const r = RMAP[nu.realm], f = FOES[r.id], done = S.realms[r.id].stars.filter(x => x > 0).length;
+    hero = `<div class="hero" style="--rc:${r.col}">
+      <div class="row"><div class="foe-big">${foeArt(r.id, nu.boss)}</div>
+      <div><span class="tag hot">${nu.boss ? "Guardian battle" : "Next battle"}</span><h2>${nu.boss ? f.g : f.n}</h2>
+      <div class="small">${r.name} · ${r.sub}</div>
+      <div class="muted small">${nu.boss ? `Land ${BOSS_N} hits to win the Seal` : `Case ${done + 1} of ${r.cases} · land ${CASE_N} hits · about 4 min`}</div></div></div>
+      <button class="btn big wide" id="fight" style="margin-top:12px">Fight!</button></div>`;
+  } else hero = `<div class="hero" style="--rc:var(--brass)"><h2>Every Seal is recovered!</h2><p class="muted small" style="margin:6px 0 0">Replay any realm for 3 stars, chase a Rush record, or sit a Mock Trial.</p></div>`;
+  el.innerHTML = `
+  <div class="stack">
+    <div class="row" style="justify-content:space-between;align-items:flex-end">
+      <div><div class="muted small">${esc(title())} · Level ${l} · ${S.xp - cur} / ${nxt - cur} XP</div><h1>${esc(S.name)}</h1></div>
+      <div class="row" style="gap:6px"><button class="btn ghost" id="help" aria-label="How to play" style="padding:10px 14px">?</button>
+      <button class="btn ghost" id="toProfile" aria-label="Progress and settings" style="padding:10px">${I.user.replace("<svg", '<svg width="22" height="22"')}</button></div>
+    </div>
+    <div class="qbar" title="Level progress"><i style="width:${Math.round((S.xp - cur) / (nxt - cur) * 100)}%"></i></div>
+    ${hero}
+    ${nCh ? `<button class="btn verd wide" id="chestBtn">${I.key.replace("<svg", '<svg width="18" height="18"')} ${free && nCh === 1 ? "Claim your free daily chest" : `Open ${nCh} chest${nCh === 1 ? "" : "s"}`}</button>` : ""}
+    <button class="card" id="todayCard" style="text-align:left;width:100%">
+      <div class="row"><div class="ring" style="--p:${pct}"><span>${pct}%</span></div>
+      <div style="flex:1"><b>Today</b><div class="muted small">${dx} of ${S.goal} XP${pct >= 100 ? " · Goal met!" : ""} · ${days} day${days === 1 ? "" : "s"} to the Grand Trial</div></div></div>
+      <div class="stack" style="gap:4px;margin-top:10px">${S.quests.list.map(q => { const d = QUESTS.find(x => x.id === q.id), ok = q.prog >= d.goal; return `<div class="row small"><span style="color:${ok ? "var(--verd)" : "var(--dim)"};width:16px">${ok ? "✓" : "○"}</span><span style="flex:1">${d.text}</span><span class="muted">${q.prog}/${d.goal}</span></div>`; }).join("")}</div>
+    </button>
+    <h3 style="margin-top:4px">More ways to play</h3>
+    <div class="modes">
+      <button class="mode" id="mRush">${I.bolt}<b>Lantern Rush</b><span class="muted small">3 min · best ${S.rushBest}</span></button>
+      <button class="mode" id="mTrial">${I.scroll}<b>Mock Trial</b><span class="muted small">30 min exam</span></button>
+      <button class="mode" id="mRev" ${due ? "" : "disabled"}>${I.book}<b>Unsolved</b><span class="muted small">${due ? due + " to retry" : "none due"}</span></button>
+    </div>
+    <h3 style="margin-top:4px">All realms <span class="muted small" style="font-family:var(--f-body)">· ${seals().length} of 9 Seals</span></h3>
+    <div class="stack" id="realms"></div>
+  </div>`;
+  const list = $("#realms", el);
+  REALMS.forEach(r => {
+    const st = S.realms[r.id], earned = st.stars.reduce((a, b) => a + b, 0), max = r.cases * 3;
+    const b = document.createElement("button");
+    b.className = "realm" + (r.focus ? " focus" : ""); b.style.setProperty("--rc", r.col);
+    b.innerHTML = `<span class="emb">${REALM_ICON[r.id]}</span>
+      <span class="seal">${st.boss ? I.seal : ""}</span>
+      <div class="name">${r.name}</div>
+      <div class="muted small">${r.sub} · ${st.stars.filter(x => x > 0).length}/${r.cases} cases${r.focus ? ' · <span class="tag hot">Focus</span>' : ""}</div>
+      <div class="bar"><i style="width:${Math.round((earned + (st.boss ? 3 : 0)) / (max + 3) * 100)}%"></i></div>`;
+    b.onclick = () => go("realm", r.id);
+    list.appendChild(b);
+  });
+  if ($("#fight", el)) $("#fight", el).onclick = () => startSession({ mode: nu.boss ? "boss" : "case", realm: nu.realm, idx: nu.idx });
+  $("#help", el).onclick = () => guide(false);
+  $("#toProfile", el).onclick = () => go("profile");
+  $("#todayCard", el).onclick = () => go("quests");
+  $("#mRush", el).onclick = () => go("rush");
+  $("#mTrial", el).onclick = trialIntro;
+  $("#mRev", el).onclick = startReview;
+  if ($("#chestBtn", el)) $("#chestBtn", el).onclick = () => { if (free) claimFree(); else openNext(); };
+}
+function vRealm(el) {
+  const r = RMAP[ui.realm], st = S.realms[r.id], f = FOES[r.id];
+  const nextIdx = st.stars.findIndex(s => s === 0);
+  const bossOpen = nextIdx === -1;
+  const nodes = [];
+  for (let i = 0; i < r.cases; i++) nodes.push({ i, boss: false });
+  nodes.push({ i: r.cases, boss: true });
+  const offs = [0, 60, 90, 60, 0, -60, -90, -60];
+  el.innerHTML = `
+    <div class="row" style="margin-bottom:6px"><button class="btn ghost" id="back" style="padding:8px 12px">‹ Play</button></div>
+    <div class="row" style="--rc:${r.col}"><span style="width:44px;height:44px;color:${r.col}">${REALM_ICON[r.id]}</span><div><h1 style="font-size:30px">${r.name}</h1><div class="muted small">${r.sub}</div></div></div>
+    <p class="muted small" style="margin:10px 0 0">Beat each ${f.n} in order. Then face ${f.g} to win this realm's Seal and a clue.</p>
+    <div class="path" style="--rc:${r.col}">${nodes.map((n, k) => {
+      const stars = n.boss ? 0 : st.stars[n.i];
+      const locked = n.boss ? !bossOpen && !st.boss : stars === 0 && n.i !== nextIdx;
+      const cls = n.boss ? ("boss " + (st.boss ? "done" : bossOpen ? "next" : "locked")) : (stars > 0 ? "done" : n.i === nextIdx ? "next" : "locked");
+      const icon = locked ? I.lock : n.boss ? (st.boss ? I.seal.replace('width="22" height="22"', 'width="44" height="44"') : foeArt(r.id, true)) : (stars > 0 ? I.star : foeArt(r.id, false));
+      return `<div style="transform:translateX(${offs[k % offs.length]}px);position:relative">
+        <button class="node ${cls}" data-n="${n.i}" data-boss="${n.boss ? 1 : 0}" data-locked="${locked ? 1 : 0}" aria-label="${n.boss ? "Guardian battle" : "Case " + (n.i + 1)}">${icon}
+        ${!n.boss ? `<span class="stars">${[0, 1, 2].map(s => `<span style="color:${s < stars ? "var(--brass)" : "var(--line)"}">${I.star}</span>`).join("")}</span>` : ""}</button>
+        <span class="node-label${offs[k % offs.length] > 0 ? " left" : ""}">${n.boss ? (st.boss ? "Seal recovered" : f.g) : "Case " + (n.i + 1)}</span></div>`;
+    }).join("")}</div>
+    <p class="muted small" style="text-align:center;margin-top:28px">Stars show how many hearts you had left. Replay a case to earn all 3.</p>`;
+  $("#back", el).onclick = () => go("map");
+  el.querySelectorAll(".node").forEach(b => b.onclick = () => {
+    const boss = b.dataset.boss === "1";
+    if (b.dataset.locked === "1") { toast(boss ? "Win every case in this realm first." : "Win the case before this one first."); return; }
+    startSession({ mode: boss ? "boss" : "case", realm: r.id, idx: +b.dataset.n });
+  });
+}
+function vQuests(el) {
+  ensureQuests();
+  const allDone = S.quests.list.every(q => q.claimed);
+  el.innerHTML = `<div class="stack">
+    <h1>Daily Quests</h1><p class="muted" style="margin:0">New quests every day. Finish all three for a bonus chest.</p>
+    ${S.quests.list.map((q, i) => { const d = QUESTS.find(x => x.id === q.id); const done = q.prog >= d.goal; return `
+      <div class="card quest"><div><b>${d.text}</b>${d.always ? ' <span class="tag hot">Daily</span>' : ""}<div class="qbar"><i style="width:${q.prog / d.goal * 100}%"></i></div><div class="muted small">${q.prog} / ${d.goal} · 40 gold + 30 XP</div></div>
+      ${q.claimed ? '<span class="tag">Claimed</span>' : `<button class="btn ${done ? "" : "ghost"}" data-q="${i}" ${done ? "" : "disabled"} style="padding:8px 12px">Claim</button>`}</div>`; }).join("")}
+    ${allDone && !S.quests.bonus ? `<button class="btn wide" id="bonus">Claim bonus chest</button>` : ""}
+    <h2 style="margin-top:10px">Renown Road</h2>
+    <p class="muted small" style="margin:0">Renown: <b style="color:var(--parch)">${S.renown}</b>. Earn it from cases, Guardians, Rushes and Mock Trials.</p>
+    <div class="road">${ROAD.map((m, i) => `<div class="mile ${i < S.road ? "got" : ""}"><b>${m.at}</b>${{ chest: "Chest", gold: m.n + " gold", ward: "Ember Ward", hints: m.n + " hints", title: "Title: " + m.t }[m.kind]}</div>`).join("")}</div>
+  </div>`;
+  el.querySelectorAll("[data-q]").forEach(b => b.onclick = () => {
+    const q = S.quests.list[+b.dataset.q]; q.claimed = true;
+    addGold(40); addXP(30); save(); toast("Quest complete: +40 gold, +30 XP"); route();
+  });
+  if ($("#bonus", el)) $("#bonus", el).onclick = () => { S.quests.bonus = true; S.chests++; save(); openNext(); };
+}
+function vRush(el) {
+  const secs = 180 + (eq("cinder") ? 30 : 0);
+  el.innerHTML = `<div class="stack">
+    <div class="row"><button class="btn ghost" id="back" style="padding:8px 12px">‹ Play</button></div>
+    <h1>Lantern Rush</h1>
+    <p class="muted" style="margin:0">Your lantern burns for ${secs / 60 >= 3.5 ? "3 min 30 s" : "3 minutes"}. Solve as many riddles as you can from every realm. Three misses and the flame goes out. Riddles get harder as your streak grows.</p>
+    <div class="stat-grid"><div class="stat"><span class="muted small">Personal best</span><b>${S.rushBest}</b></div><div class="stat"><span class="muted small">Time</span><b>${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}</b></div><div class="stat"><span class="muted small">Lives</span><b>3</b></div></div>
+    <button class="btn wide" id="go">${I.bolt.replace("<svg", '<svg width="20" height="20"')} Light the lantern</button>
+    <div class="card"><h3>Tips</h3><p class="small muted" style="margin:6px 0 0">Code questions: trace one line at a time and write variable values on scrap paper. Number questions: estimate first, then check which option is close.</p></div>
+  </div>`;
+  $("#go", el).onclick = () => startSession({ mode: "rush" });
+  $("#back", el).onclick = () => go("map");
+}
+function vAllies(el) {
+  el.innerHTML = `<div class="stack"><h1>Allies</h1><p class="muted" style="margin:0">Collect shards from chests. ${UNLOCK} shards unlock an ally; more shards level it up. Equip one ally to use its power.</p>
+    <div class="allies">${ALLIES.map(a => {
+      const sh = S.allies[a.id].shards, own = owned(a.id), lv = allyLvl(a.id);
+      const goal = own ? (lv >= 4 ? 1 : UNLOCK + lv * LVL_STEP) : UNLOCK;
+      const prog = own ? (lv >= 4 ? 1 : (sh - UNLOCK - (lv - 1) * LVL_STEP) / LVL_STEP) : sh / UNLOCK;
+      return `<button class="ally ${own ? "" : "locked"} ${S.equipped === a.id ? "equipped" : ""}" data-a="${a.id}" style="--ac:${a.col}">
+        <div class="port">${allyArt(a.id)}</div><div class="rar">${a.rar}</div><h3>${a.name}</h3><div class="muted small">${a.title}</div>
+        <div class="small" style="margin-top:4px">${own ? "Level " + lv : sh + " / " + UNLOCK + " shards"}</div><div class="shardbar"><i style="width:${Math.min(100, prog * 100)}%"></i></div>
+        ${S.equipped === a.id ? '<div class="tag hot" style="margin-top:6px">Equipped</div>' : ""}</button>`;
+    }).join("")}</div></div>`;
+  el.querySelectorAll("[data-a]").forEach(b => b.onclick = () => {
+    const a = AMAP[b.dataset.a], own = owned(a.id);
+    modal(`<div style="--ac:${a.col};text-align:center" class="ally"><div class="port" style="width:120px;height:120px">${allyArt(a.id).replace('viewBox="0 0 64 64"', 'viewBox="0 0 64 64" style="width:90px;height:90px"')}</div>
+      <div class="rar">${a.rar}</div><h2>${a.name}, ${a.title}</h2><p>${a.perk}</p>
+      ${own ? (S.equipped === a.id ? `<p class="muted">Already equipped.</p>` : `<button class="btn wide" id="equip">Equip ${a.name}</button>`) : `<p class="muted">${S.allies[a.id].shards} of ${UNLOCK} shards. ${a.id === "nyx" ? "Solve the mystery in the Casebook." : "Find shards in chests."}</p>`}
+      <button class="btn ghost wide" id="cl" style="margin-top:10px">Close</button></div>`, (m, close) => {
+      $("#cl", m).onclick = close;
+      if ($("#equip", m)) $("#equip", m).onclick = () => { S.equipped = a.id; save(); close(); route(); toast(`${a.name} joins you.`); };
+    });
+  });
+}
+function vCasebook(el) {
+  const got = seals();
+  const canAccuse = got.length >= 6 && !S.accused.solved;
+  el.innerHTML = `<div class="stack">
+    <h1>The Casebook</h1>
+    <div class="card"><p class="storyp" style="margin:0">${INTRO}</p></div>
+    <div class="row" style="flex-wrap:wrap;gap:6px">${REALMS.map(r => `<span title="${r.name}" style="opacity:${got.includes(r.id) ? 1 : .25}">${I.seal}</span>`).join("")}<span class="muted small">${got.length} of 9 Seals</span></div>
+    <h2>Suspects</h2><p class="muted small" style="margin:0">Tap a suspect to cross them off once a clue rules them out.</p>
+    <div class="suspects">${SUSPECTS.map(s => `<button class="suspect ${S.marks[s.id] ? "out" : ""}" data-s="${s.id}"><b>${s.name}</b><div class="small muted">${s.note}</div></button>`).join("")}</div>
+    <h2>Clues</h2>
+    <div class="stack">${REALMS.map(r => got.includes(r.id) ? `<div class="clue"><div class="tag" style="font-style:normal;margin-bottom:4px">${r.name}</div><div>${CLUES[r.id]}</div></div>` : `<div class="clue locked">${I.lock.replace("<svg", '<svg width="14" height="14"')} Defeat the Guardian of ${r.name} to reveal this clue.</div>`).join("")}</div>
+    ${S.accused.solved ? `<div class="card"><h3>Case closed</h3><p class="storyp">${ENDING}</p></div>` :
+      `<button class="btn wide" id="accuse" ${canAccuse ? "" : "disabled"}>Name the thief</button><p class="muted small" style="margin:0;text-align:center">${canAccuse ? "Choose carefully. A wrong accusation costs nothing but pride." : "Recover 6 Seals to make an accusation."}</p>`}
+  </div>`;
+  el.querySelectorAll("[data-s]").forEach(b => b.onclick = () => { S.marks[b.dataset.s] = !S.marks[b.dataset.s]; save(); route(); });
+  if ($("#accuse", el)) $("#accuse", el).onclick = () => modal(`<h2>Who stole the Seals?</h2><div class="stack" style="margin-top:12px">${SUSPECTS.map(s => `<button class="btn ghost wide" data-who="${s.id}">${s.name}</button>`).join("")}<button class="btn ghost wide" id="cl">Not yet</button></div>`, (m, close) => {
+    $("#cl", m).onclick = close;
+    m.querySelectorAll("[data-who]").forEach(b => b.onclick = () => {
+      close(); S.accused.tries++;
+      if (b.dataset.who === CULPRIT) {
+        S.accused.solved = true; S.allies.nyx.shards = Math.max(S.allies.nyx.shards, UNLOCK); S.titles.push("Truthseeker"); addRenown(200); addGold(300); save(); route();
+        modal(`<div style="text-align:center;--ac:#e4b14d" class="ally"><div class="port" style="width:120px;height:120px">${allyArt("nyx")}</div><h2>Case closed!</h2><p class="storyp" style="text-align:left">${ENDING}</p><p><b>Nyx the Star Owl</b> has joined you. +300 gold, +200 Renown, title: Truthseeker.</p><button class="btn wide" id="ok">Wonderful</button></div>`, (m2, c2) => { $("#ok", m2).onclick = c2; });
+      } else { save(); toast("The evidence does not hold. Reread your clues."); }
+    });
+  });
+}
+function vProfile(el) {
+  const total = Object.values(S.q).reduce((a, r) => a + r.n, 0), correct = Object.values(S.q).reduce((a, r) => a + r.c, 0);
+  const byRealm = REALMS.map(r => { let n = 0, c = 0; BANK.filter(q => q.r === r.id).forEach(q => { const x = S.q[q.id]; if (x) { n += x.n; c += x.c; } }); return { r, n, c }; });
+  const codes = {};
+  BANK.forEach(q => { const x = S.q[q.id]; if (!x) return; q.c.split(",").map(s => s.trim()).forEach(k => { codes[k] = codes[k] || { n: 0, c: 0 }; codes[k].n += x.n; codes[k].c += x.c; }); });
+  const weak = Object.entries(codes).filter(([, v]) => v.n >= 3).sort((a, b) => a[1].c / a[1].n - b[1].c / b[1].n).slice(0, 4);
+  const st = streakInfo();
+  const set = new Set(S.days), wset = new Set(S.wardDays);
+  el.innerHTML = `<div class="stack">
+    <div class="row"><button class="btn ghost" id="back" style="padding:8px 12px">‹ Play</button></div>
+    <h1>Progress Report</h1>
+    <p class="muted small" style="margin:0">Progress saves on this device automatically. To move it to another device, use the backup code at the bottom of this page.</p>
+    <div class="stat-grid">
+      <div class="stat"><span class="muted small">Answered</span><b>${total}</b></div>
+      <div class="stat"><span class="muted small">Accuracy</span><b>${total ? Math.round(correct / total * 100) : 0}%</b></div>
+      <div class="stat"><span class="muted small">Streak</span><b>${st.n} d</b></div>
+      <div class="stat"><span class="muted small">Sleuth rating</span><b>${Math.round(S.rating)}</b></div>
+      <div class="stat"><span class="muted small">Rush best</span><b>${S.rushBest}</b></div>
+      <div class="stat"><span class="muted small">Seals</span><b>${seals().length}/9</b></div>
+    </div>
+    <div class="card"><h3>Last 14 days</h3><div class="days14" style="margin-top:8px">${[...Array(14)].map((_, i) => { const d = addDays(today(), i - 13); return `<i class="${set.has(d) ? "on" : wset.has(d) ? "ward" : ""}" title="${d}"></i>`; }).join("")}</div></div>
+    <div class="card stack"><h3>Accuracy by realm</h3>${byRealm.map(x => `<div class="hbar"><span>${x.r.name.replace("The ", "")}</span><span class="track"><i style="width:${x.n ? x.c / x.n * 100 : 0}%;background:${x.r.col}"></i></span><span class="muted">${x.n ? Math.round(x.c / x.n * 100) + "%" : "–"}</span></div>`).join("")}</div>
+    <div class="card"><h3>Topics to review</h3>${weak.length ? `<p class="small muted" style="margin:4px 0 8px">Lowest accuracy, Ontario Grade 7 expectation codes (3+ attempts).</p>` + weak.map(([k, v]) => `<div class="hbar"><span>${k}</span><span class="track"><i style="width:${v.c / v.n * 100}%;background:var(--ember)"></i></span><span class="muted">${Math.round(v.c / v.n * 100)}%</span></div>`).join("") : `<p class="small muted">Answer a few more questions to see weak spots.</p>`}</div>
+    <div class="card"><h3>Mock Trials</h3>${S.trials.length ? S.trials.slice(-6).reverse().map(t => `<div class="row" style="justify-content:space-between;border-bottom:1px solid var(--line);padding:6px 0"><span>${t.date}</span><span class="muted small">Math ${t.p.M} · Sci ${t.p.S} · Code ${t.p.C}</span><b>${t.score}/${t.n}</b></div>`).join("") : `<p class="small muted">No Mock Trials yet.</p>`}</div>
+    <div class="card stack"><h3>Settings</h3>
+      <label class="small" for="goalSel">Daily XP goal</label>
+      <div class="row">${[60, 100, 160].map(g => `<button class="btn ${S.goal === g ? "" : "ghost"}" data-goal="${g}" style="padding:8px 12px">${g}</button>`).join("")}</div>
+      <label class="small" for="nm">Name</label><input type="text" id="nm" value="${esc(S.name)}" maxlength="20">
+      <div class="row"><button class="btn ghost" id="snd" style="padding:8px 12px">Sound: ${S.sound === false ? "off" : "on"}</button><button class="btn ghost" id="how" style="padding:8px 12px">How to play</button></div>
+    </div>
+    <div class="card stack"><h3>Backup code</h3><p class="small muted" style="margin:0">Copy this code to move progress to another device or browser.</p>
+      <textarea id="code" readonly></textarea>
+      <div class="row"><button class="btn ghost" id="copy">Copy code</button><button class="btn ghost" id="imp">Restore from code</button></div>
+    </div>
+    <div class="card stack"><h3>Start over</h3><p class="small muted" style="margin:0">Erase all progress on this device and begin the story again from the first battle.</p>
+      <button class="btn ghost" id="reset" style="color:var(--ember);border-color:var(--ember)">Start a new game</button>
+    </div>
+  </div>`;
+  $("#back", el).onclick = () => go("map");
+  $("#code", el).value = exportCode();
+  $("#copy", el).onclick = async () => { try { await navigator.clipboard.writeText(exportCode()); toast("Code copied."); } catch (e) { $("#code", el).select(); toast("Select the code and copy it."); } };
+  $("#imp", el).onclick = () => modal(`<h2>Restore progress</h2><p class="small muted">Paste a backup code. This replaces progress on this device.</p><textarea id="in"></textarea><div class="row" style="margin-top:10px"><button class="btn" id="ok">Restore</button><button class="btn ghost" id="cl">Cancel</button></div>`, (m, close) => {
+    $("#cl", m).onclick = close;
+    $("#ok", m).onclick = () => { try { const s = JSON.parse(decodeURIComponent(escape(atob($("#in", m).value.trim())))); if (!s.realms) throw 0; S = migrate(s); S.created = Date.now(); save(); close(); toast("Progress restored."); go("map"); } catch (e) { toast("That code did not work. Copy it again in full."); } };
+  });
+  el.querySelectorAll("[data-goal]").forEach(b => b.onclick = () => { S.goal = +b.dataset.goal; save(); route(); });
+  $("#snd", el).onclick = () => { S.sound = S.sound === false; save(); route(); };
+  $("#how", el).onclick = () => guide(false);
+  $("#reset", el).onclick = resetGame;
+  $("#nm", el).onchange = e => { S.name = e.target.value.trim() || S.name; save(); };
+}
+function exportCode() { return btoa(unescape(encodeURIComponent(JSON.stringify(S)))); }
+
+// ------------------------------------------------------------ chests
+function openNext() {
+  if (S.bigChests > 0) { S.bigChests--; openChest(true); }
+  else if (S.chests > 0) { S.chests--; openChest(false); }
+}
+function openChest(big) {
+  const loot = rollChest(big); save();
+  modal(`<div style="text-align:center"><h2>${big ? "Guardian's Reliquary" : "Reliquary"}</h2><p class="muted small">Tap the chest.</p>
+    <div class="chest-stage" id="stage"><div class="rays"></div>${CHEST_SVG}</div><div id="lootArea"></div></div>`, (m, close) => {
+    const stage = $("#stage", m);
+    const reveal = () => {
+      stage.onclick = null; stage.classList.add("shake");
+      setTimeout(() => {
+        stage.classList.remove("shake"); stage.classList.add("open"); sfx("chest");
+        const s = loot.shards[0], a = AMAP[s.id];
+        $("#lootArea", m).innerHTML = `
+          <div class="ally" style="--ac:${a.col};border:0;background:none;padding:0"><div class="port">${allyArt(a.id)}</div><div class="rar">${a.rar}</div><b>${a.name}</b> +${s.n} shards${s.unlocked ? `<div class="tag hot" style="margin-top:6px">New ally unlocked!</div>` : ""}</div>
+          <div class="loot" style="margin-top:10px"><span class="chip">${I.gold}+${loot.gold}</span>${loot.hint ? `<span class="chip">${I.hint} +1 hint</span>` : ""}${loot.ward ? `<span class="chip" style="color:#d59b46">${I.ward} +1 Ember Ward</span>` : ""}</div>
+          <button class="btn wide" id="ok" style="margin-top:14px">${S.chests + (S.bigChests || 0) ? `Open next (${S.chests + (S.bigChests || 0)})` : "Continue"}</button>`;
+        $("#ok", m).onclick = () => { close(); if (S.chests || S.bigChests) openNext(); else { renderTop(); if (!$("#done")) route(); } };
+      }, 1000);
+    };
+    stage.onclick = reveal;
+    stage.setAttribute("role", "button"); stage.setAttribute("tabindex", "0");
+    stage.onkeydown = e => { if (e.key === "Enter" || e.key === " ") reveal(); };
+  });
+}
+
+// ------------------------------------------------------------ sessions
+function startSession(o) {
+  let qs = [];
+  const sciIds = REALMS.filter(r => r.sec === "S").map(r => r.id), mathIds = REALMS.filter(r => r.sec === "M").map(r => r.id);
+  const hp = o.mode === "boss" ? BOSS_N : CASE_N;
+  // A fight ends at 0 HP or 0 hearts, so it needs at most hp + 2 questions.
+  if (o.mode === "case" || o.mode === "boss") qs = pickQuestions(BANK.filter(q => q.r === o.realm), hp + 2);
+  if (o.mode === "review") qs = o.ids.map(id => BANK.find(q => q.id === id));
+  if (o.mode === "trial") {
+    qs = [...pickQuestions(BANK.filter(q => mathIds.includes(q.r)), 11), ...pickQuestions(BANK.filter(q => sciIds.includes(q.r)), 7), ...pickQuestions(BANK.filter(q => q.r === "clock"), 7)];
+  }
+  ui.session = {
+    ...o, items: qs.map(prepare), i: 0, res: [], combo: 0, maxCombo: 0, shield: eq("bramble"), fifty: eq("tamsin"),
+    lives: 3, hearts: 3, hp, hpMax: hp, t0: Date.now(),
+    deadline: o.mode === "rush" ? Date.now() + (180 + (eq("cinder") ? 30 : 0)) * 1000 : o.mode === "trial" ? Date.now() + 30 * 60 * 1000 : 0,
+    xp: 0, gold: 0, answers: [], tier: 1,
+  };
+  if (o.mode === "rush") rushNext();
+  renderTabs(); renderQ();
+  if (ui.session.deadline) tick();
+}
+function rushNext() {
+  const s = ui.session;
+  const seen = new Set(s.items.map(x => x.q.id));
+  let pool = BANK.filter(q => !seen.has(q.id) && q.d <= s.tier);
+  if (!pool.length) pool = BANK.filter(q => !seen.has(q.id));
+  const q = pool[rnd(pool.length)];
+  s.items.push(prepare(q));
+}
+function tick() {
+  const s = ui.session; if (!s || !s.deadline) return;
+  const left = Math.max(0, Math.round((s.deadline - Date.now()) / 1000));
+  const t = $("#timer"); if (t) { t.textContent = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}`; t.style.color = left < 30 ? "var(--ember)" : ""; }
+  if (left <= 0) { finish(); return; }
+  s.tickT = setTimeout(tick, 500);
+}
+function quitSession() {
+  modal(`<h2>Leave this ${ui.session.mode === "trial" ? "Mock Trial" : "run"}?</h2><p class="muted">Progress in this run will be lost.</p><div class="row"><button class="btn ghost" id="stay">Keep going</button><button class="btn" id="leave" style="background:var(--ember);box-shadow:0 4px 0 #8a321d">Leave</button></div>`, (m, close) => {
+    $("#stay", m).onclick = close;
+    $("#leave", m).onclick = () => { close(); clearTimeout(ui.session.tickT); const back = ui.session.mode === "case" || ui.session.mode === "boss" ? ["realm", ui.session.realm] : [ui.session.mode === "rush" ? "rush" : "map"]; ui.session = null; go(...back); };
+  });
+}
+function renderQ() {
+  const s = ui.session, it = s.items[s.i], q = it.q, r = RMAP[q.r];
+  const isTrial = s.mode === "trial", isRush = s.mode === "rush", isFight = s.mode === "case" || s.mode === "boss";
+  const total = s.items.length;
+  let battle = "";
+  if (isFight) {
+    const f = FOES[s.realm], boss = s.mode === "boss";
+    const line = s.i === 0 ? (boss ? "“" + f.taunt + "”" : "Right answers hit. Wrong answers cost a heart.") : `${s.hp} more hit${s.hp === 1 ? "" : "s"} to win`;
+    battle = `<div class="battle" style="--rc:${r.col}"><div class="foe" id="foe">${foeArt(s.realm, boss)}</div>
+      <div style="flex:1;min-width:0"><div class="row" style="justify-content:space-between"><b>${boss ? f.g : f.n}</b>${heartsHtml(s.hearts)}</div>
+      <div class="hp"><i id="hpbar" style="width:${s.hp / s.hpMax * 100}%"></i></div><div class="muted small" id="foeLine">${line}</div></div></div>`;
+  }
+  $("#view").innerHTML = `
+    <div class="quiz-top">
+      <button class="x" id="quit" aria-label="Leave">${I.close}</button>
+      ${isRush ? `<div style="flex:1" class="row"><span class="chip">${I.bolt}${s.res.filter(Boolean).length}</span><span class="chip" style="color:var(--ember)">${"♥".repeat(s.lives)}<span style="opacity:.3">${"♥".repeat(3 - s.lives)}</span></span></div>`
+        : isFight ? `<div style="flex:1" class="muted small">${RMAP[s.realm].name}${s.mode === "boss" ? " · Guardian" : " · Case " + (s.idx + 1)}</div>`
+        : `<div class="pips">${s.items.map((_, k) => `<i class="${k < s.res.length ? (isTrial ? "ok" : s.res[k] ? "ok" : "no") : k === s.i ? "cur" : ""}"></i>`).join("")}</div>`}
+      ${s.deadline ? `<span class="chip timer" id="timer">--:--</span>` : `<span class="combo" title="Combo">${s.combo >= 2 ? I.flame + "×" + s.combo : ""}</span>`}
+    </div>
+    ${battle}
+    <div class="qcard" id="qcard" style="--rc:${r.col}">
+      <div class="qmeta"><span class="tag" style="color:${r.col}">${r.name.replace("The ", "")}${isTrial ? " · Q" + (s.i + 1) + " of " + total : ""}</span><span class="tag">${q.c}</span></div>
+      <div class="qtext">${q.q}</div>
+      ${q.k ? `<pre class="code">${hl(q.k)}</pre>` : ""}
+      <div class="opts" id="opts">${it.opts.map((o, k) => `<button class="opt ${q.m ? "mono" : ""}" data-k="${k}"><b>${"ABCD"[k]}</b><span>${esc(o)}</span></button>`).join("")}</div>
+      <div class="toolbar">
+        ${!isTrial && !isRush ? `<button id="hintBtn">${I.hint} ${s.fifty ? "Free 50/50" : "Hint (" + S.hints + ")"}</button>` : ""}
+        ${q.k ? `<button id="refBtn">Code reference</button>` : ""}
+        ${isTrial && s.i > 0 ? `<button id="prevBtn">‹ Back</button>` : ""}
+      </div>
+    </div>`;
+  $("#quit").onclick = quitSession;
+  if (s.deadline) { const left = Math.max(0, Math.round((s.deadline - Date.now()) / 1000)); $("#timer").textContent = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}`; }
+  if (isTrial && s.answers[s.i] !== undefined) { const b = $(`[data-k="${s.answers[s.i]}"]`); if (b) b.classList.add("pick"); }
+  $("#opts").querySelectorAll(".opt").forEach(b => b.onclick = () => answer(+b.dataset.k, b));
+  if ($("#hintBtn")) $("#hintBtn").onclick = useHint;
+  if ($("#refBtn")) $("#refBtn").onclick = showRef;
+  if ($("#prevBtn")) $("#prevBtn").onclick = () => { s.i--; s.res.pop(); renderQ(); };
+  $("#view").focus({ preventScroll: true }); window.scrollTo(0, 0);
+}
+function useHint() {
+  const s = ui.session, it = s.items[s.i];
+  if (s.usedHint === s.i) return;
+  let n = 1;
+  if (s.fifty) { s.fifty = false; n = 2; }
+  else if (S.hints > 0) { S.hints--; save(); }
+  else { toast("No hints left. Win them from chests and the Renown Road."); return; }
+  s.usedHint = s.i;
+  shuffle([0, 1, 2, 3].filter(k => k !== it.ans)).slice(0, n).forEach(k => $(`[data-k="${k}"]`).classList.add("gone"));
+  $("#hintBtn").disabled = true;
+}
+function showRef() {
+  modal(`<h2>Code reference</h2><pre class="code">${hl(`SET x TO 5          stores 5 in x
+DISPLAY x           shows x
+INPUT x             gets x from the user
+REPEAT 4 TIMES      runs the block 4 times
+REPEAT UNTIL x > 9  checks first; stops once true
+REPEAT FOR n FROM 1 TO 5   n = 1, 2, 3, 4, 5
+IF ... THEN ... ELSE IF ... ELSE ... END IF
+                    only the first true branch runs
+DEFINE f(a) ... RETURN ... END DEFINE
+                    a subprogram you can call
+WHEN event          runs each time it happens
+17 MOD 5            remainder: 2
+RANDOM(1, 6)        random whole number 1 to 6
+AND  both true      OR  at least one true`)}</pre><button class="btn wide" id="cl" style="margin-top:12px">Got it</button>`, (m, close) => { $("#cl", m).onclick = close; });
+}
+function record(q, ok, inReview) {
+  const r = S.q[q.id] || (S.q[q.id] = { n: 0, c: 0 });
+  r.n++; if (ok) r.c++;
+  if (!ok) { r.box = 0; r.due = addDays(today(), 1); }
+  else if (r.box !== undefined && inReview) { r.box++; r.due = addDays(today(), [1, 3, 7, 14][Math.min(3, r.box - 1)] || 14); }
+  const E = 1 / (1 + Math.pow(10, (QR[q.d] - S.rating) / 400));
+  S.rating = Math.max(400, S.rating + 24 * ((ok ? 1 : 0) - E));
+  const ri = rank(S.rating).idx;
+  if (ri > (S.rankBest || 0)) { S.rankBest = ri; S.chests++; setTimeout(() => toast(`Rank up: ${RANKS[ri][1]} League! A bonus chest is waiting.`), 900); }
+  const d = day(); d.ans++; if (ok) d.cor++;
+  if (ok) { const sec = RMAP[q.r].sec; if (sec === "C") quest("code"); if (sec === "S") quest("sci"); if (sec === "M") quest("math"); }
+}
+function answer(k, btn) {
+  const s = ui.session, it = s.items[s.i], q = it.q;
+  if (s.locked) return;
+  if (s.mode === "trial") {
+    s.answers[s.i] = k; s.res[s.i] = true;
+    s.i++;
+    if (s.i >= s.items.length) { finish(); return; }
+    renderQ(); return;
+  }
+  s.locked = true;
+  const ok = k === it.ans, fight = s.mode === "case" || s.mode === "boss";
+  record(q, ok, s.mode === "review");
+  s.res.push(ok);
+  const opts = $("#opts"); opts.classList.add("locked");
+  opts.querySelector(`[data-k="${it.ans}"]`).classList.add("ok");
+  if (!ok) btn.classList.add("no");
+  if (ok) {
+    s.combo++; s.maxCombo = Math.max(s.maxCombo, s.combo); quest("combo", s.combo, true);
+    const mult = s.combo >= 5 ? 2 : s.combo >= 3 ? 1.5 : 1;
+    const g = addXP(10 * q.d * mult, q.r); s.xp += g; s.gold += addGold(2);
+    floater(`+${g} XP${mult > 1 ? " ×" + mult : ""}`, btn);
+    if (fight) {
+      s.hp--; $("#hpbar").style.width = (s.hp / s.hpMax * 100) + "%";
+      const fo = $("#foe"); fo.classList.remove("hit"); void fo.offsetWidth; fo.classList.add("hit");
+      $("#foeLine").textContent = s.hp > 0 ? `${s.hp} more hit${s.hp === 1 ? "" : "s"} to win` : "Defeated!";
+    }
+    sfx("ok");
+  } else {
+    if (s.shield) { s.shield = false; toast("Bramble's shield saved your combo!"); } else s.combo = 0;
+    if (s.mode === "rush") s.lives--;
+    if (fight) { s.hearts--; $("#hearts").outerHTML = heartsHtml(s.hearts); $("#qcard").classList.add("jolt"); }
+    sfx("no");
+  }
+  if (s.mode === "review" && ok) quest("review");
+  save();
+  if (s.mode === "rush") {
+    if (ok && s.res.filter(Boolean).length % 4 === 0) s.tier = Math.min(3, s.tier + 1);
+    setTimeout(() => {
+      if (ui.session !== s) return;
+      s.locked = false;
+      if (s.lives <= 0) { finish(); return; }
+      rushNext(); s.i++; renderQ();
+    }, ok ? 650 : 1800);
+    return;
+  }
+  const al = AMAP[S.equipped] || ALLIES[0];
+  const okL = ["Direct hit!", "That stung it!", "Yes! Keep going!", "Clean strike!", "Riddle cracked!"], noL = ["Shake it off. Here is why:", "It got us that time. Here is why:", "So close. Here is why:"];
+  const head = ok ? (s.combo >= 3 ? `Critical hit! Combo ×${s.combo}` : okL[rnd(okL.length)]) : noL[rnd(noL.length)];
+  const fb = document.createElement("div");
+  fb.className = "feedback" + (ok ? "" : " bad");
+  fb.innerHTML = `<div class="row"><span class="mini-port">${allyArt(al.id)}</span><div><div class="muted small">${al.name} says</div><h3>${head}</h3></div></div>
+    <p>${ok ? "" : `<b>Answer: ${esc(q.o[0])}.</b> `}${q.e}</p><button class="btn wide ${ok ? "verd" : ""}" id="next">Continue</button>`;
+  document.body.appendChild(fb);
+  $("#next", fb).focus();
+  $("#next", fb).onclick = () => {
+    fb.remove(); s.locked = false; s.i++;
+    const over = fight ? (s.hp <= 0 || s.hearts <= 0 || s.i >= s.items.length) : s.i >= s.items.length;
+    if (over) finish(); else renderQ();
+  };
+}
+function finish() {
+  const s = ui.session; clearTimeout(s.tickT);
+  document.querySelectorAll(".feedback").forEach(x => x.remove());
+  markActive();
+  const right = s.res.filter(Boolean).length, fight = s.mode === "case" || s.mode === "boss";
+  let html = "", chest = false, bigChest = false, extra = "", won = false, party = false;
+  if (fight) S.last = s.realm;
+  if (s.mode === "case") {
+    const f = FOES[s.realm], st = S.realms[s.realm];
+    won = s.hp <= 0;
+    const stars = won ? Math.max(1, s.hearts) : 0;
+    if (stars > st.stars[s.idx]) st.stars[s.idx] = stars;
+    if (won) { s.xp += addXP(20 + stars * 10, s.realm); s.gold += addGold(15 + stars * 5); addRenown(stars * 8); quest("cases"); if (stars === 3) quest("three"); chest = true; party = true; }
+    html = `<div class="foe-big ${won ? "ko" : ""}" style="margin:0 auto">${foeArt(s.realm, false)}</div><h1>${won ? "Victory!" : "The " + f.n + " escaped"}</h1>
+      <div class="row" style="justify-content:center;gap:6px;margin:4px 0">${[0, 1, 2].map(k => `<span style="width:48px;height:48px;color:${k < stars ? "var(--brass)" : "var(--line)"}">${I.star}</span>`).join("")}</div>
+      <p class="muted">${won ? `${f.n} defeated with ${s.hearts} heart${s.hearts === 1 ? "" : "s"} left.` : "You ran out of hearts. You keep the XP you earned, and each miss is saved as an Unsolved Case. Strike again!"}</p>`;
+  }
+  if (s.mode === "boss") {
+    const f = FOES[s.realm], st = S.realms[s.realm];
+    won = s.hp <= 0;
+    const first = won && !st.boss;
+    if (won) { st.boss = true; s.xp += addXP(80, s.realm); s.gold += addGold(60); addRenown(first ? 60 : 20); bigChest = first; chest = !first; party = true; }
+    const n = seals().length;
+    html = `<div class="foe-big ${won ? "ko" : ""}" style="margin:0 auto">${foeArt(s.realm, true)}</div><h1>${f.g} ${won ? "yields!" : "stands firm"}</h1>
+      <p class="muted">${won ? `Beaten with ${s.hearts} heart${s.hearts === 1 ? "" : "s"} left.` : `You ran out of hearts with ${s.hp} hit${s.hp === 1 ? "" : "s"} to go. Read the explanations, then strike again.`}</p>
+      ${first ? `<div class="card" style="text-align:left">${I.seal} <b>Seal recovered: ${RMAP[s.realm].name}</b><p class="clue" style="margin:8px 0 0">${CLUES[s.realm]}</p></div>` : ""}
+      ${first && NOTES[n] ? `<div class="card" style="text-align:left;border-color:#5b4721"><p style="margin:0;font-style:italic">${NOTES[n]}</p></div>` : ""}`;
+  }
+  if (s.mode === "review") {
+    s.xp += addXP(10 + right * 5); html = `<h1>Unsolved Cases</h1><p class="muted">${right} of ${s.items.length} solved. Solved cases return later to make sure they stick; misses return tomorrow.</p>`;
+  }
+  if (s.mode === "rush") {
+    const best = right > S.rushBest; if (best) { S.rushBest = right; party = right > 0; }
+    s.xp += addXP(right * 4); s.gold += addGold(right * 2); addRenown(right * 3); quest("rush");
+    html = `<h1>${s.lives <= 0 ? "The lantern flickers out" : "Time!"}</h1><div style="font-family:var(--f-display);font-size:72px;line-height:1;color:var(--brass);margin:10px 0">${right}</div><p class="muted">${best ? "New personal best!" : "Personal best: " + S.rushBest}</p>`;
+    if (right >= 8) chest = true;
+  }
+  if (s.mode === "trial") {
+    const p = { M: 0, S: 0, C: 0 }, cnt = { M: 0, S: 0, C: 0 };
+    let score = 0; const wrong = [];
+    s.items.forEach((it, k) => {
+      const sec = RMAP[it.q.r].sec; cnt[sec]++;
+      const ok = s.answers[k] === it.ans; record(it.q, ok, false);
+      if (ok) { p[sec]++; score++; } else wrong.push({ it, k });
+    });
+    S.trials.push({ date: today(), score, n: s.items.length, p: { M: p.M + "/" + cnt.M, S: p.S + "/" + cnt.S, C: p.C + "/" + cnt.C } });
+    s.xp += addXP(score * 6); s.gold += addGold(score * 3); addRenown(score * 4); if (score >= 18) chest = true; party = true;
+    const mins = Math.round((Date.now() - s.t0) / 60000);
+    html = `<h1>Mock Trial complete</h1><div style="font-family:var(--f-display);font-size:64px;line-height:1;color:var(--brass);margin:8px 0">${score}<span style="font-size:28px;color:var(--dim)"> / ${s.items.length}</span></div>
+      <div class="stat-grid" style="margin-bottom:10px"><div class="stat"><span class="muted small">Math</span><b>${p.M}/${cnt.M}</b></div><div class="stat"><span class="muted small">Science</span><b>${p.S}/${cnt.S}</b></div><div class="stat"><span class="muted small">Coding</span><b>${p.C}/${cnt.C}</b></div></div>
+      <p class="muted small">Time used: ${mins} min of 30. Wrong answers are now Unsolved Cases.</p>`;
+    extra = wrong.length ? `<h3 style="margin-top:14px;text-align:left">Review your misses</h3>` + wrong.map(({ it, k }) => `<div class="card" style="text-align:left;margin-top:8px"><div class="small muted">Q${k + 1} · ${it.q.c}</div><div>${it.q.q}</div>${it.q.k ? `<pre class="code">${hl(it.q.k)}</pre>` : ""}<p class="small" style="margin:8px 0 0"><span style="color:var(--ember)">Your answer: ${s.answers[k] !== undefined ? esc(it.opts[s.answers[k]]) : "none"}</span><br><span style="color:var(--verd)">Correct: ${esc(it.q.o[0])}</span><br>${it.q.e}</p></div>`).join("") : "";
+  }
+  if (day().xp >= S.goal && !day().goalPaid) { day().goalPaid = true; addGold(30); setTimeout(() => toast("Daily goal met! +30 gold"), 300); }
+  if (chest) S.chests++;
+  if (bigChest) S.bigChests = (S.bigChests || 0) + 1;
+  save();
+  const mode = s.mode, realm = s.realm, idx = s.idx;
+  ui.session = null; renderTabs(); renderTop();
+  sfx(fight && !won ? "lose" : "win"); if (party) confetti();
+  const nu = nextUp(), nf = nu && FOES[nu.realm];
+  $("#view").innerHTML = `<div class="stack" style="text-align:center;padding-top:14px">${html}
+    <div class="loot"><span class="chip">+${s.xp} XP</span><span class="chip">${I.gold}+${s.gold}</span>${s.maxCombo >= 3 ? `<span class="chip" style="color:var(--brass)">${I.flame} best combo ${s.maxCombo}</span>` : ""}</div>
+    ${bigChest ? `<button class="btn verd wide" id="bc">Open the Guardian's Reliquary</button>` : chest ? `<button class="btn verd wide" id="cc">${I.key.replace("<svg", '<svg width="18" height="18"')} Open your chest</button>` : ""}
+    ${fight && !won ? `<button class="btn wide" id="again">Try again</button>` : fight && nu ? `<button class="btn wide" id="nextB">Next battle: ${nu.boss ? nf.g : nf.n} ›</button>` : ""}
+    <button class="btn ghost wide" id="done">${fight ? "Back to Play" : "Continue"}</button>${extra}</div>`;
+  if ($("#bc")) $("#bc").onclick = () => { $("#bc").remove(); openNext(); };
+  if ($("#cc")) $("#cc").onclick = () => { $("#cc").remove(); openNext(); };
+  if ($("#again")) $("#again").onclick = () => startSession({ mode, realm, idx });
+  if ($("#nextB")) $("#nextB").onclick = () => startSession({ mode: nu.boss ? "boss" : "case", realm: nu.realm, idx: nu.idx });
+  $("#done").onclick = () => go(mode === "rush" ? "rush" : "map");
+  window.scrollTo(0, 0);
+}
+function startReview() {
+  const ids = shuffle(dueReviews()).slice(0, 8);
+  if (!ids.length) { toast("No Unsolved Cases are due. Well done."); return; }
+  startSession({ mode: "review", ids });
+}
+function trialIntro() {
+  modal(`<h2>Mock Trial</h2><p>25 mixed questions in 30 minutes, built like half of the real 60-minute assessment: 11 math, 7 science, 7 coding.</p>
+    <ul class="small muted" style="padding-left:18px"><li>No feedback until the end, like the real thing.</li><li>No calculator. Use scrap paper.</li><li>You can go back one question at a time.</li></ul>
+    <div class="row"><button class="btn" id="go">Begin</button><button class="btn ghost" id="cl">Not now</button></div>`, (m, close) => {
+    $("#cl", m).onclick = close; $("#go", m).onclick = () => { close(); startSession({ mode: "trial" }); };
+  });
+}
+
+// ------------------------------------------------------------ first run
+function welcome() {
+  const starters = ["pip", "bramble", "nib"];
+  let pick = "nib";
+  $("#view").innerHTML = `<div class="stack" style="padding-top:30px">
+    <div class="tag hot" style="align-self:flex-start">Cipherkeep Academy</div>
+    <h1 style="font-size:44px">The Nine Stolen Seals</h1>
+    <p class="storyp">${INTRO}</p>
+    <label for="nm"><b>What should the Academy call you?</b></label>
+    <input type="text" id="nm" maxlength="20" placeholder="Your name or codename">
+    <b>Choose your first ally</b>
+    <div class="allies" style="grid-template-columns:repeat(3,1fr)">${starters.map(id => { const a = AMAP[id]; return `<button class="ally ${id === pick ? "equipped" : ""}" data-a="${id}" style="--ac:${a.col};padding:8px"><div class="port" style="width:64px;height:64px">${allyArt(id)}</div><b>${a.name}</b><div class="small muted">${a.title}</div></button>`; }).join("")}</div>
+    <p class="small muted" id="perk" style="margin:0"></p>
+    <button class="btn big wide" id="start">Enter the Academy</button>
+  </div>`;
+  const setPerk = () => { $("#perk").textContent = AMAP[pick].name + ": " + AMAP[pick].perk; };
+  setPerk();
+  document.querySelectorAll("[data-a]").forEach(b => b.onclick = () => { pick = b.dataset.a; document.querySelectorAll("[data-a]").forEach(x => x.classList.toggle("equipped", x === b)); setPerk(); });
+  $("#start").onclick = () => {
+    const name = $("#nm").value.trim() || "Apprentice";
+    S = migrate(freshState(name, pick)); ensureQuests(); save(); go("map"); guide(true);
+  };
+}
+
+// ------------------------------------------------------------ boot
+function start() {
+  S = localLoad(); if (S) migrate(S);
+  const h = location.hash.slice(1);
+  if (["map", "quests", "rush", "shop", "allies", "casebook", "profile"].includes(h)) ui.view = h;
+  if (S) { applyWards(); ensureQuests(); route(); } else { renderTop(); renderTabs(); welcome(); }
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) { }
+  try { if ("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("sw.js").catch(() => { }); } catch (e) { }
+  window.addEventListener("hashchange", () => { const v = location.hash.slice(1); if (S && !ui.session && v && v !== ui.view && ["map", "quests", "rush", "shop", "allies", "casebook", "profile"].includes(v)) { ui.view = v; route(); } });
+  if (window.claude && window.claude.hot) window.claude.hot.snapshot(() => ({ view: ui.view }));
+}
+if (window.claude && window.claude.hot && window.claude.hot.ready) window.claude.hot.ready(start); else start();
+</script>
+</body>
+</html>
